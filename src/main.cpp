@@ -296,8 +296,48 @@ void  nacitaj_data(){
   }
 
 void  odoslat_data(){
+  if(!data.rele_0){
+    digitalWrite(RELE0_PIN, HIGH);   //relé0 rozopnute
+  }else{
+    digitalWrite(RELE0_PIN, LOW);    //relé0 zapnute
+  }
+
+  if(!data.rele_1){
+    digitalWrite(RELE1_PIN, HIGH);   //relé1 rozopnute
+  }else{
+    digitalWrite(RELE1_PIN, LOW);    //relé1 zapnute
 
   }
+
+  if(!data.rele_2){
+    digitalWrite(RELE2_PIN, HIGH);   //relé1 rozopnute
+  }else{
+    digitalWrite(RELE2_PIN, LOW);    //relé1 zapnute
+
+  }
+
+  if(!data.rele_3){
+    digitalWrite(RELE3_PIN, HIGH);   //relé1 rozopnute
+  }else{
+    digitalWrite(RELE3_PIN, LOW);    //relé1 zapnute
+
+  }
+
+  if(!data.rele_4){
+    digitalWrite(RELE4_PIN, HIGH);   //relé1 rozopnute
+  }else{
+    digitalWrite(RELE4_PIN, LOW);    //relé1 zapnute
+
+  }
+
+  if(!data.rele_5){
+    digitalWrite(RELE5_PIN, HIGH);   //relé5 rozopnute
+  }else{
+    digitalWrite(RELE5_PIN, LOW);    //relé5 zapnute
+
+  }
+}
+
 
 void  urobit_prepocty(){
    // přepočet analogové hodnoty z celého rozsahu
