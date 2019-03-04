@@ -36,6 +36,15 @@
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD.h> // Hardware-specific library
 
+//konstanty pre relatka
+#define RELE0_PIN 23
+#define RELE1_PIN 25
+#define RELE2_PIN 27
+#define RELE3_PIN 29
+#define RELE4_PIN 31
+#define RELE5_PIN 33
+
+//konstanty pre displej
 
 #define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
 #define LCD_CS A3   // Chip Select goes to Analog 3
@@ -43,6 +52,9 @@
 #define LCD_WR A1  // LCD Write goes to Analog 1
 #define LCD_RD A0 // LCD Read goes to Analog 0
 
+//konstanty pre koncoveé spínače
+#define pinD 14
+#define pinD 15
 //--------------------------------------------------------------
 // Farby
 #define	BLACK    0x0000
@@ -77,6 +89,13 @@ struct Data{
   bool kurenie_zap;
   bool chladenie_zap;
   bool ochrana_zap;
+  //vystupy
+  bool rele_0;
+  bool rele_1;
+  bool rele_2;
+  bool rele_3;
+  bool rele_4;
+  bool rele_5;
 } data;
 
 
@@ -216,7 +235,6 @@ void funk3(){ //TEPLOTA IZBY
   //(osa X, osa Y, rozmery X, Rozmery Y, zaoblenie, farba)
   tft.fillRoundRect(3, 220, 474, 100, 10, WHITE);
 
-
   //Text (Stvorec 3)- Teplota izby
   tft.setCursor(110,225);
   tft.setTextColor(BLACK); tft.setTextSize(4);
@@ -229,19 +247,17 @@ void funk3(){ //TEPLOTA IZBY
   Serial.println(string);
 
   sprintf(string,"Nastavena %s C", String(data.temp_set).c_str());
-
 tft.setCursor(10,292);
   tft.setTextColor(MAGENTA); tft.setTextSize(3);
   tft.println(string);
   Serial.println(string);
 
-tft.setCursor(330,270);
+/*tft.setCursor(330,270);
   tft.setTextColor(BLUE); tft.setTextSize(4);
-  tft.println("Chladi");
-
-/*tft.setCursor(350,270);
+  tft.println("Chladi");*/
+tft.setCursor(350,270);
   tft.setTextColor(RED); tft.setTextSize(4);
-  tft.println("Kuri");*/
+  tft.println("Kuri");
 }
 
 
@@ -273,6 +289,20 @@ void setup() {
   data.chladenie_zap = false;
   data.ochrana_zap = false;
 
+// nastavenie vystupov , relatok
+  pinMode(RELE0_PIN, OUTPUT);
+  pinMode(RELE1_PIN, OUTPUT);
+  pinMode(RELE2_PIN, OUTPUT);
+  pinMode(RELE3_PIN, OUTPUT);
+  pinMode(RELE4_PIN, OUTPUT);
+  pinMode(RELE5_PIN, OUTPUT);
+
+  data.rele_0 = true;
+  data.rele_1 = true;
+  data.rele_2 = false;
+  data.rele_3 = false;
+  data.rele_4 = true;
+  data.rele_5 = false;
 
   // zahájení komunikace po sériové lince
   // rychlostí 9600 baud
