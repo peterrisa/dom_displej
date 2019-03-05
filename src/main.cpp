@@ -37,6 +37,10 @@
 
 #include <easy_code.h>
 
+//kontakty pre vstupy
+#define INPUT_PIN_13 16
+#define INPUT_PIN_12 17
+
 //konstanty pre relatka
 #define RELE0_PIN 23
 #define RELE1_PIN 25
@@ -346,6 +350,10 @@ void setup() {
   msg.b_2.v.b_04 = true;  //rele_4
   msg.b_2.v.b_05 = false; //rele_5
 
+  //nastvanie vstupov
+  pinMode(INPUT_PIN_12, INPUT);
+  pinMode(INPUT_PIN_13, INPUT);
+
 // nastavenie vystupov , relatok
   pinMode(RELE0_PIN, OUTPUT);
   pinMode(RELE1_PIN, OUTPUT);
@@ -372,8 +380,20 @@ void  nacitaj_data(){
     // načtení hodnoty z analogového pinu
   analogHodnota = analogRead(analogPin);
 
-
+  //nacitaj stav tlacitok
+  //nastavenie koncovych poloh garaze
+	Serial.println(digitalRead(INPUT_PIN_12));
+  if( digitalRead(INPUT_PIN_12) == HIGH ){
+    msg.b_1.v.b_00 = true; //kontakt otvorene true
+  }else{
+    msg.b_1.v.b_00 = false; //kontakt otvorene false
   }
+  if( digitalRead(INPUT_PIN_13) == HIGH ){
+    msg.b_1.v.b_01 = true; //kontakt zatvorene true
+  }else{
+    msg.b_1.v.b_01 = false; //kontakt zatvorene false
+  }
+}
 
 void  odoslat_data(){
   if(!msg.b_2.v.b_00){
@@ -468,6 +488,9 @@ void loop(){
   //odoslat data do servera
   encodeTelegram(buffer, &msg, sizeof(msg));
   Serial.println(buffer);
+
+  Serial.print(" OTV: ");Serial.println(msg.b_1.v.b_00);
+  Serial.print(" ZAT: ");Serial.println(msg.b_1.v.b_01);
 
   // pauza
   delay(500);
