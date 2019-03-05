@@ -52,8 +52,8 @@ typedef struct {
 //-------------------------------	
 //end of payload	
 //-------------------------------
-//	byte CRC1;
-//	byte CRC2;
+//	byte CRC1; //prepared for the future
+//	byte CRC2; //prepared for the future 
 //-------------------------------
 //shoud be CRC check
 //-------------------------------
@@ -77,7 +77,5 @@ void encodeTelegram(byte *buffer, const TELEGRAM *msg, const int len);
 //msg - struktura telegramu
 //len - velkost struktury telegramu v bajtoch; int len = sizeof(TELEGRAM);
 void decodeTelegram(TELEGRAM *msg, const int len, const byte *buffer);
-
-
 
 #endif

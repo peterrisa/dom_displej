@@ -103,6 +103,7 @@ typedef struct {
 TELEGRAM msg;
 //datovy vymenny buffer
 char buffer[2*sizeof(TELEGRAM)+1];
+/*
 //-----------------------------------------------------------
 //prekontroluje ci je telegram validny
 // vrati true ak je validny, false ak nevalidny
@@ -149,6 +150,7 @@ void decodeTelegram(TELEGRAM *msg, const int len, const byte *buffer){
     *b_msg = (a & 0x0F) | ((b & 0x0F)<<4);
   }
 }
+*/
 //-----------------------------------------------------------
 
 char string[256];

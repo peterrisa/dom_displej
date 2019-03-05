@@ -74,7 +74,7 @@ void test(){
 
   
 	Serial.print("zakodovany telegram: ");Serial.println(buffer);
-  Serial.print("odkodovany telegram: ");Serial.println((char*)&msg_orig);
+	Serial.print("odkodovany telegram: ");Serial.println((char*)&msg_orig);
 	
 	TELEGRAM msg_copy;
 	decodeTelegram(&msg_copy, sizeof(msg_copy), buffer);
