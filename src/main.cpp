@@ -36,42 +36,8 @@
 #include <Adafruit_TFTLCD.h> // Hardware-specific library
 
 #include <easy_code.h>
+#include "app_config.h"
 
-//kontakty pre vstupy
-#define INPUT_PIN_13 16
-#define INPUT_PIN_12 17
-
-//konstanty pre relatka
-#define RELE0_PIN 23
-#define RELE1_PIN 25
-#define RELE2_PIN 27
-#define RELE3_PIN 29
-#define RELE4_PIN 31
-#define RELE5_PIN 33
-
-//konstanty pre displej
-
-#define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
-#define LCD_CS A3   // Chip Select goes to Analog 3
-#define LCD_CD A2  // Command/Data goes to Analog 2
-#define LCD_WR A1  // LCD Write goes to Analog 1
-#define LCD_RD A0 // LCD Read goes to Analog 0
-
-//konstanty pre koncoveé spínače
-#define pinD 14
-#define pinD 15
-//--------------------------------------------------------------
-// Farby
-#define	BLACK    0x0000
-#define	BLUE     0x001F
-#define	RED      0xF800
-#define	GREEN    0x07E0
-#define CYAN     0x07FF
-#define MAGENTA  0xF81F
-#define YELLOW   0xFFE0
-#define GREY     0x7BCF
-#define BLUGREEN 0x0B74
-#define WHITE    0xFFFF
 //--------------------------------------------------------------
 //celkova bajtova velkost telegramu je: 1*2 + 4*4 + 4*2 = 26 bytov
 /*
@@ -103,7 +69,7 @@ typedef struct {
 TELEGRAM msg;
 //datovy vymenny buffer
 char buffer[2*sizeof(TELEGRAM)+1];
-/*
+
 //-----------------------------------------------------------
 //prekontroluje ci je telegram validny
 // vrati true ak je validny, false ak nevalidny
@@ -150,7 +116,7 @@ void decodeTelegram(TELEGRAM *msg, const int len, const byte *buffer){
     *b_msg = (a & 0x0F) | ((b & 0x0F)<<4);
   }
 }
-*/
+
 //-----------------------------------------------------------
 
 char string[256];
@@ -319,9 +285,7 @@ tft.setCursor(350,270);
 
 // Světelný senzor TEMT6000
 
-// nastavení čísla prepojovanieho pinu
 
-  #define analogPin A6
 // vytvoření proměnných pro výsledky měření
 float analogHodnota;
 int prepocet;
@@ -353,16 +317,16 @@ void setup() {
   msg.b_2.v.b_05 = false; //rele_5
 
   //nastvanie vstupov
-  pinMode(INPUT_PIN_12, INPUT);
-  pinMode(INPUT_PIN_13, INPUT);
+  pinMode(INPUT_PIN_16, INPUT);
+  pinMode(INPUT_PIN_17, INPUT);
 
 // nastavenie vystupov , relatok
-  pinMode(RELE0_PIN, OUTPUT);
-  pinMode(RELE1_PIN, OUTPUT);
-  pinMode(RELE2_PIN, OUTPUT);
-  pinMode(RELE3_PIN, OUTPUT);
-  pinMode(RELE4_PIN, OUTPUT);
-  pinMode(RELE5_PIN, OUTPUT);
+  pinMode(RELE0_PIN_23, OUTPUT);
+  pinMode(RELE1_PIN_25, OUTPUT);
+  pinMode(RELE2_PIN_27, OUTPUT);
+  pinMode(RELE3_PIN_29, OUTPUT);
+  pinMode(RELE4_PIN_31, OUTPUT);
+  pinMode(RELE5_PIN_33, OUTPUT);
 
   // zahájení komunikace po sériové lince
   // rychlostí 115200 baud
@@ -385,12 +349,12 @@ void  nacitaj_data(){
   //nacitaj stav tlacitok
   //nastavenie koncovych poloh garaze
 	Serial.println(digitalRead(INPUT_PIN_12));
-  if( digitalRead(INPUT_PIN_12) == HIGH ){
+  if( digitalRead(INPUT_PIN_16) == HIGH ){
     msg.b_1.v.b_00 = true; //kontakt otvorene true
   }else{
     msg.b_1.v.b_00 = false; //kontakt otvorene false
   }
-  if( digitalRead(INPUT_PIN_13) == HIGH ){
+  if( digitalRead(INPUT_PIN_17) == HIGH ){
     msg.b_1.v.b_01 = true; //kontakt zatvorene true
   }else{
     msg.b_1.v.b_01 = false; //kontakt zatvorene false
@@ -399,44 +363,39 @@ void  nacitaj_data(){
 
 void  odoslat_data(){
   if(!msg.b_2.v.b_00){
-    digitalWrite(RELE0_PIN, HIGH);   //relé0 rozopnute
+    digitalWrite(RELE0_PIN_23, HIGH);   //relé0 rozopnute
   }else{
-    digitalWrite(RELE0_PIN, LOW);    //relé0 zapnute
+    digitalWrite(RELE0_PIN_23, LOW);    //relé0 zapnute
   }
 
   if(!msg.b_2.v.b_01){
-    digitalWrite(RELE1_PIN, HIGH);   //relé1 rozopnute
+    digitalWrite(RELE1_PIN_25, HIGH);   //relé1 rozopnute
   }else{
-    digitalWrite(RELE1_PIN, LOW);    //relé1 zapnute
-
+    digitalWrite(RELE1_PIN_25, LOW);    //relé1 zapnute
   }
 
   if(!msg.b_2.v.b_02){
-    digitalWrite(RELE2_PIN, HIGH);   //relé1 rozopnute
+    digitalWrite(RELE2_PIN_27, HIGH);   //relé1 rozopnute
   }else{
-    digitalWrite(RELE2_PIN, LOW);    //relé1 zapnute
-
+    digitalWrite(RELE2_PIN_27, LOW);    //relé1 zapnute
   }
 
   if(!msg.b_2.v.b_03){
-    digitalWrite(RELE3_PIN, HIGH);   //relé1 rozopnute
+    digitalWrite(RELE3_PIN_29, HIGH);   //relé1 rozopnute
   }else{
-    digitalWrite(RELE3_PIN, LOW);    //relé1 zapnute
-
+    digitalWrite(RELE3_PIN_29, LOW);    //relé1 zapnute
   }
 
   if(!msg.b_2.v.b_04){
-    digitalWrite(RELE4_PIN, HIGH);   //relé1 rozopnute
+    digitalWrite(RELE4_PIN_31, HIGH);   //relé1 rozopnute
   }else{
-    digitalWrite(RELE4_PIN, LOW);    //relé1 zapnute
-
+    digitalWrite(RELE4_PIN_31, LOW);    //relé1 zapnute
   }
 
   if(!msg.b_2.v.b_05){
-    digitalWrite(RELE5_PIN, HIGH);   //relé5 rozopnute
+    digitalWrite(RELE5_PIN_33, HIGH);   //relé5 rozopnute
   }else{
-    digitalWrite(RELE5_PIN, LOW);    //relé5 zapnute
-
+    digitalWrite(RELE5_PIN_33, LOW);    //relé5 zapnute
   }
 }
 
@@ -447,7 +406,7 @@ void  urobit_prepocty(){
   prepocet = map(analogHodnota, 0, 1023, 0, 100);
 
   msg.v_3.v = analogHodnota / 1023 * 100;
-  }
+}
 
 void loop(){
   //zapametaj predosly stav periferii
