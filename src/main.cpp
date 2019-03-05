@@ -348,7 +348,7 @@ void  nacitaj_data(){
 
   //nacitaj stav tlacitok
   //nastavenie koncovych poloh garaze
-	Serial.println(digitalRead(INPUT_PIN_12));
+	Serial.println(digitalRead(INPUT_PIN_16));
   if( digitalRead(INPUT_PIN_16) == HIGH ){
     msg.b_1.v.b_00 = true; //kontakt otvorene true
   }else{
