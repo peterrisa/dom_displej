@@ -31,10 +31,11 @@
 
 
 //Knižnice
-
 #include <MCUFRIEND_kbv.h>
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD.h> // Hardware-specific library
+
+#include <easy_code.h>
 
 //konstanty pre relatka
 #define RELE0_PIN 23
@@ -68,36 +69,85 @@
 #define BLUGREEN 0x0B74
 #define WHITE    0xFFFF
 //--------------------------------------------------------------
+//celkova bajtova velkost telegramu je: 1*2 + 4*4 + 4*2 = 26 bytov
+/*
+typedef struct {
+	byte stx; //allways STX
+//-------------------------------
+//payload
+//-------------------------------
+	F_VALUE v_1;//4 bytes
+	F_VALUE v_2;//4 bytes
+	F_VALUE v_3;//4 bytes
+	F_VALUE v_4;//4 bytes
+	B_VALUE b_1;//2 bytes
+	B_VALUE b_2;//2 bytes
+	B_VALUE b_3;//2 bytes
+	B_VALUE b_4;//2 bytes
+//-------------------------------
+//end of payload
+//-------------------------------
+//	byte CRC1;
+//	byte CRC2;
+//-------------------------------
+//shoud be CRC check
+//-------------------------------
+	byte etx; //allways ETX
+} TELEGRAM;
+*/
+//vymenny datovy system medzi arduinom a nodejs cez seriovu linku
+TELEGRAM msg;
+//datovy vymenny buffer
+char buffer[2*sizeof(TELEGRAM)+1];
+//-----------------------------------------------------------
+//prekontroluje ci je telegram validny
+// vrati true ak je validny, false ak nevalidny
+bool isValidTelegram(const TELEGRAM *msg){
+	if(msg->stx != STX)
+		return false;
+	if(msg->etx != ETX)
+		return false;
+	return true;
+}
 
+//prekonvertuje telegram do char retazca ukonceneho '\x00'
+//buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
+//buffer - pole znakov kam sa bude konvertovat
+//msg - struktura telegramu
+//len - velkost struktury telegramu v bajtoch; sizeof(TELEGRAM)
+void encodeTelegram(byte *buffer, const TELEGRAM *msg, const int len){
+	byte *b_msg = (byte *)msg;
+	byte *buf = buffer;
+  byte a,b;
+
+	for(int i = 0; i < len; i++, b_msg++){
+    a = *b_msg & 0x0F;
+    b = (*b_msg & 0xF0) >> 4;
+    *buf++ = a + ADD;
+    *buf++ = b + ADD;
+	}
+  *buf = '\x00';
+}
+
+//prekonvertuje char retazec ukonceny '\x00' na telegram
+//buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
+//buffer - pole znakov odkial sa bude konvertovat
+//msg - struktura telegramu
+//len - velkost struktury telegramu v bajtoch; int len = sizeof(TELEGRAM);
+void decodeTelegram(TELEGRAM *msg, const int len, const byte *buffer){
+  byte *b_msg = (byte *)msg;
+  byte *buf = buffer;
+  byte a,b;
+
+  for(int i = 0; i < len; i++, b_msg++){
+    a = *buf++ - ADD;
+    b = *buf++ - ADD;
+    *b_msg = (a & 0x0F) | ((b & 0x0F)<<4);
+  }
+}
+//-----------------------------------------------------------
 
 char string[256];
-
-struct Data{
-  //aktualna teplota
-  float temp_act;
-  // prednastaneva teplota
-  float temp_set;
-  // detektor svetla
-  float svetla;
-  // koncove polohy garaz
-  bool garaz_o;
-  bool garaz_z;
-  // koncove polohy zaluzie
-  bool zaluzie_o;
-  bool zaluzie_z;
-  // kurenie
-  bool kurenie_zap;
-  bool chladenie_zap;
-  bool ochrana_zap;
-  //vystupy
-  bool rele_0;
-  bool rele_1;
-  bool rele_2;
-  bool rele_3;
-  bool rele_4;
-  bool rele_5;
-} data;
-
 
 MCUFRIEND_kbv tft;
 
@@ -179,7 +229,7 @@ void funk1(){  //SVETLA
 
   tft.setCursor(45,170);
   tft.setTextColor(GREY); tft.setTextSize(3);
-sprintf(string, "Jas %s", String(data.svetla).c_str());
+sprintf(string, "Jas %s", String(msg.v_3.v).c_str());
 tft.println(string);
   tft.setCursor(68,65);
   tft.setTextColor(BLACK); tft.setTextSize(3);
@@ -240,13 +290,13 @@ void funk3(){ //TEPLOTA IZBY
   tft.setTextColor(BLACK); tft.setTextSize(4);
   tft.println("Teplota izby");
 
-  sprintf(string, "Aktualna  %s C", String(data.temp_act).c_str());
+  sprintf(string, "Aktualna  %s C", String(msg.v_1.v).c_str());
   tft.setCursor(10,265);
   tft.setTextColor(BLACK); tft.setTextSize(3);
   tft.println(string);
   Serial.println(string);
 
-  sprintf(string,"Nastavena %s C", String(data.temp_set).c_str());
+  sprintf(string,"Nastavena %s C", String(msg.v_2.v).c_str());
 tft.setCursor(10,292);
   tft.setTextColor(MAGENTA); tft.setTextSize(3);
   tft.println(string);
@@ -273,21 +323,28 @@ int prepocet;
 void setup() {
 
   //nastavenie datovej struktury
-  data.temp_act = 20.0;
-  // prednastaneva teplota
-  data.temp_set = 10.0;
-  // prednstsvrnir dvrtls
-  data.svetla = 0.0;
+  msg.stx = STX;//povinna konstanta
+	msg.etx = ETX;//povinna konstanta
+  msg.v_1.v = 20.0;//aktualna teplota
+  msg.v_2.v = 10.0;// prednastaneva teplota
+  msg.v_3.v = 0.0;// detektor svetla
   //nastavenie koncovych poloh garaze
-  data.garaz_o = true;
-  data.garaz_z = false;
+  msg.b_1.v.b_00 = true; //kontakt otvorene
+  msg.b_1.v.b_01 = false; //kontakt zatvorene
   // koncove polohy zaluzie
-  data.zaluzie_o = true;
-  data.zaluzie_z = false;
+  msg.b_1.v.b_02 = true; //kontakt otvorene
+  msg.b_1.v.b_03 = false; //kontakt zatvorene
   // kurenie
-  data.kurenie_zap = false;
-  data.chladenie_zap = false;
-  data.ochrana_zap = false;
+  msg.b_2.v.b_00 = false; //kurenie zapnute
+  msg.b_2.v.b_01 = false; //chladenie zapnute
+  msg.b_2.v.b_02 = false; //ochrana zapnuta
+  // relatka
+  msg.b_2.v.b_00 = true;  //rele_0
+  msg.b_2.v.b_01 = true;  //rele_1
+  msg.b_2.v.b_02 = false; //rele_2
+  msg.b_2.v.b_03 = false; //rele_3
+  msg.b_2.v.b_04 = true;  //rele_4
+  msg.b_2.v.b_05 = false; //rele_5
 
 // nastavenie vystupov , relatok
   pinMode(RELE0_PIN, OUTPUT);
@@ -297,16 +354,9 @@ void setup() {
   pinMode(RELE4_PIN, OUTPUT);
   pinMode(RELE5_PIN, OUTPUT);
 
-  data.rele_0 = true;
-  data.rele_1 = true;
-  data.rele_2 = false;
-  data.rele_3 = false;
-  data.rele_4 = true;
-  data.rele_5 = false;
-
   // zahájení komunikace po sériové lince
-  // rychlostí 9600 baud
-  Serial.begin(9600);
+  // rychlostí 115200 baud
+  Serial.begin(115200);
 
 
   Serial.println(string);
@@ -326,41 +376,41 @@ void  nacitaj_data(){
   }
 
 void  odoslat_data(){
-  if(!data.rele_0){
+  if(!msg.b_2.v.b_00){
     digitalWrite(RELE0_PIN, HIGH);   //relé0 rozopnute
   }else{
     digitalWrite(RELE0_PIN, LOW);    //relé0 zapnute
   }
 
-  if(!data.rele_1){
+  if(!msg.b_2.v.b_01){
     digitalWrite(RELE1_PIN, HIGH);   //relé1 rozopnute
   }else{
     digitalWrite(RELE1_PIN, LOW);    //relé1 zapnute
 
   }
 
-  if(!data.rele_2){
+  if(!msg.b_2.v.b_02){
     digitalWrite(RELE2_PIN, HIGH);   //relé1 rozopnute
   }else{
     digitalWrite(RELE2_PIN, LOW);    //relé1 zapnute
 
   }
 
-  if(!data.rele_3){
+  if(!msg.b_2.v.b_03){
     digitalWrite(RELE3_PIN, HIGH);   //relé1 rozopnute
   }else{
     digitalWrite(RELE3_PIN, LOW);    //relé1 zapnute
 
   }
 
-  if(!data.rele_4){
+  if(!msg.b_2.v.b_04){
     digitalWrite(RELE4_PIN, HIGH);   //relé1 rozopnute
   }else{
     digitalWrite(RELE4_PIN, LOW);    //relé1 zapnute
 
   }
 
-  if(!data.rele_5){
+  if(!msg.b_2.v.b_05){
     digitalWrite(RELE5_PIN, HIGH);   //relé5 rozopnute
   }else{
     digitalWrite(RELE5_PIN, LOW);    //relé5 zapnute
@@ -374,12 +424,13 @@ void  urobit_prepocty(){
   //  0-1023 na procentuální rozsah 0-100
   prepocet = map(analogHodnota, 0, 1023, 0, 100);
 
-  data.svetla = analogHodnota / 1023 * 100;
+  msg.v_3.v = analogHodnota / 1023 * 100;
   }
 
 void loop(){
-  struct Data predosle_data;
-  memcpy(&predosle_data, &data, sizeof(predosle_data));
+  //zapametaj predosly stav periferii
+  TELEGRAM last_msg;
+  memcpy(&last_msg, &msg, sizeof(msg));
 
 
 // nacita data z periferii do struktury data
@@ -402,19 +453,22 @@ void loop(){
   }
 
 
-  if(predosle_data.svetla != data.svetla){
+  if(last_msg.v_3.v != msg.v_3.v){
     funk1();
   }
-  if((predosle_data.garaz_o != data.garaz_o) || (predosle_data.garaz_z != data.garaz_z)){
+  if((last_msg.b_1.v.b_00 != msg.b_1.v.b_00) || (last_msg.b_1.v.b_01 != msg.b_1.v.b_01)){
     funk2();
   }
-  if((predosle_data.temp_act != data.temp_act) || (predosle_data.temp_set != data.temp_set)){
+  if((last_msg.v_1.v != msg.v_1.v) || (last_msg.v_2.v != msg.v_2.v)){
     funk3();
   }
 
 // odoslat data do periferii
   odoslat_data();
+  //odoslat data do servera
+  encodeTelegram(buffer, &msg, sizeof(msg));
+  Serial.println(buffer);
 
-// pauza
+  // pauza
   delay(500);
 }
