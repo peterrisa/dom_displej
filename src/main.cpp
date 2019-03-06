@@ -315,11 +315,15 @@ void setup() {
   msg.b_2.v.b_03 = false; //rele_3
   msg.b_2.v.b_04 = true;  //rele_4
   msg.b_2.v.b_05 = false; //rele_5
+	// LED
+	msg.b_3.v.b_00 = false;
 
   //nastvanie vstupov
   pinMode(INPUT_PIN_16, INPUT);
   pinMode(INPUT_PIN_17, INPUT);
+	// nastavenie LED
 
+pinMode(LED_18, OUTPUT);
 // nastavenie vystupov , relatok
   pinMode(RELE0_PIN_23, OUTPUT);
   pinMode(RELE1_PIN_25, OUTPUT);
@@ -362,6 +366,11 @@ void  nacitaj_data(){
 }
 
 void  odoslat_data(){
+	if(msg.b_3.v.b_00){
+		digitalWrite(LED_18, HIGH);   //LED zapnute
+	}else{
+		digitalWrite(LED_18, LOW);   //LED zapnute
+	}
   if(!msg.b_2.v.b_00){
     digitalWrite(RELE0_PIN_23, HIGH);   //relé0 rozopnute
   }else{
@@ -406,6 +415,12 @@ void  urobit_prepocty(){
   prepocet = map(analogHodnota, 0, 1023, 0, 100);
 
   msg.v_3.v = analogHodnota / 1023 * 100;
+	// zapnutie LED
+	if(msg.v_3.v < 20.0){
+		msg.b_3.v.b_00 = true;
+	}else{
+		msg.b_3.v.b_00 = false;
+	}
 }
 
 void loop(){

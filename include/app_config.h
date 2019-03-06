@@ -3,6 +3,8 @@
 
 // nastavení čísla prepojovanieho pinu
 #define analogPin A6
+// nastavenie led
+#define LED_18 18
 //kontakty pre vstupy
 #define INPUT_PIN_16 16
 #define INPUT_PIN_17 17
