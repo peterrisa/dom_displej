@@ -1,4 +1,3 @@
-
 //--------------------------------------------------------------
 // wiring with UNO or Mega2560:
 //--------------POWER Pins--------------------------------------
@@ -117,13 +116,11 @@ void decodeTelegram(TELEGRAM *msg, const int len, const byte *buffer){
   }
 }
 
-//-----------------------------------------------------------
-
+//--------------------------------------------------------------
 char string[256];
 
 MCUFRIEND_kbv tft;
 
-//--------------------------------------------------------------
 void setup_lcd (){
   Serial.println(F("TFT LCD test"));
   tft.reset();
@@ -131,38 +128,7 @@ void setup_lcd (){
   //Zoznam podporovaných displejov
   uint16_t identifier = tft.readID();
   if(identifier == 0x9325) {
-    /*Serial.println(F("Found ILI9325 LCD driver"));
-  } else if(identifier == 0x9328) {
-    Serial.println(F("Found ILI9328 LCD driver"));
-  } else if(identifier == 0x4535) {
-    Serial.println(F("Found LGDP4535 LCD driver"));
-  }else if(identifier == 0x7575) {
-    Serial.println(F("Found HX8347G LCD driver"));
-  } else if(identifier == 0x9595) {
-    Serial.println(F("Found HX8347-I LCD driver"));
-  } else if(identifier == 0x4747) {
-    Serial.println(F("Found HX8347-D LCD driver"));
-  } else if(identifier == 0x8347) {
-    Serial.println(F("Found HX8347-A LCD driver"));
-  }else if(identifier == 0x9341) {
-    Serial.println(F("Found ILI9341 LCD driver"));
-  }else if(identifier == 0x7783) {
-    Serial.println(F("Found ST7781 LCD driver"));
-  }else if(identifier == 0x8230) {
-    Serial.println(F("Found UC8230 LCD driver"));
-  }else if(identifier == 0x8357) {
-    Serial.println(F("Found HX8357D LCD driver"));
-  } else if(identifier==0x0101){
-      identifier=0x9341;
-      Serial.println(F("Found 0x9341 LCD driver"));
-  }else if(identifier==0x7793){
-       Serial.println(F("Found ST7793 LCD driver"));
-  }else if(identifier==0xB509){
-       Serial.println(F("Found R61509 LCD driver"));
-  }else if(identifier==0x9486){
-   Serial.println(F("Found ILI9488 LCD driver"));
-  }else {*/
-       Serial.println(F("Found ILI9486 LCD driver"));
+           Serial.println(F("Found ILI9486 LCD driver"));
   }else if(identifier==0x9488){
 
     Serial.print(F("Unknown LCD driver chip: "));
@@ -182,27 +148,24 @@ void setup_lcd (){
   // Otočenie obrazovky (o 90 stupňov) (0=0, 1=90, 2=180, 3=270)
   tft.setRotation(1);
 }
-//--------------------------------------------------------------
 
+
+
+//--------------------------------------------------------------
 
 
 // Začiatok kódu
 
 //SVETLA
-void funk1(){  //SVETLA
+void kresli_blok_1(){  //SVETLA
   //vykreslenie oblého štvorca
   //(osa X, osa Y, rozmery X, Rozmery Y, zaoblenie, farba)
-  tft.fillRoundRect(3, 0, 230, 210, 10, WHITE);
+	tft.fillRoundRect(3, 0, 230, 210, 10, WHITE);
    //Text (Stvorec 2) - Svetla
   tft.setCursor(50,10);
   tft.setTextColor(BLACK); tft.setTextSize(4);
   tft.println("Svetla");
 
-
-  tft.setCursor(45,170);
-  tft.setTextColor(GREY); tft.setTextSize(3);
-sprintf(string, "Jas %s", String(msg.v_3.v).c_str());
-tft.println(string);
   tft.setCursor(68,65);
   tft.setTextColor(BLACK); tft.setTextSize(3);
   tft.println("Spalna");
@@ -215,43 +178,101 @@ tft.setCursor(45,95);
   tft.setCursor(75,125);
   tft.setTextColor(BLACK); tft.setTextSize(3);
   tft.println("Garaz");
+}
+
+void funk1(){  //SVETLA
+
+tft.fillRect(45, 165, 160, 30, WHITE);
+
+
+  tft.setCursor(45,170);
+  tft.setTextColor(GREY); tft.setTextSize(3);
+sprintf(string, "Jas %s", String(msg.v_3.v).c_str());
+tft.println(string);
+
 
 }
 
-void funk2(){ //GARAZ
+//------------------------------------------------------------------
+void kresli_blok_2(){ //GARAZ
 
   //vykreslenie oblého štvorca
   //(osa X, osa Y, rozmery X, Rozmery Y, zaoblenie, farba)
   tft.fillRoundRect(245, 0, 225, 210, 10, WHITE);
 
-  //Vykreslenie hranatého štvorca - garaz
-  //(osa X, osa Y, rozmery X, Rozmery Y, farba)
-
-  // Obrazok garaze - zatvorena
-  tft.fillRect(267, 100, 180, 100, BLACK);
-  tft.fillRect(279, 110, 155, 16, WHITE);
-  tft.fillRect(279, 131, 155, 16, WHITE);
-  tft.fillRect(279, 152, 155, 16, WHITE);
-  tft.fillRect(279, 173, 155, 16, WHITE);
-
-  /* // Obrazok garaze - otvorena
-  tft.fillRect(267, 100, 180, 100, BLACK);
-  tft.fillRect(279, 110, 155, 16, WHITE);*/
-
 //Text (Stvorec 1) - Garaz
   tft.setCursor(300, 10);
   tft.setTextColor(BLACK);  tft.setTextSize(4);
   tft.println("Garaz");
-  tft.setCursor(280, 55);
-  tft.setTextColor(RED);  tft.setTextSize(3);
-  tft.println("Zatvorena");
-  /*tft.setCursor(290, 55);
-  tft.setTextColor(GREEN);  tft.setTextSize(3);
-  tft.println("Otvorena");*/
 
 }
 
-void funk3(){ //TEPLOTA IZBY
+void funk2(){ //GARAZ
+	tft.fillRect(280, 55, 160, 30, WHITE);
+
+  tft.setCursor(280, 55);
+  tft.setTextColor(RED);  tft.setTextSize(3);
+  /*tft.println("Zatvorena");
+  tft.setCursor(290, 55);
+  tft.setTextColor(GREEN);  tft.setTextSize(3);
+  tft.println("Otvorena");*/
+
+
+	// Garaz otvorena obrazok + text
+		if(!msg.b_1.v.b_00) {
+			tft.setCursor(290, 55);
+			tft.setTextColor(GREEN);  tft.setTextSize(3);
+			tft.println("Otvorena");
+			tft.fillRect(267, 100, 180, 100, BLACK);
+			tft.fillRect(279, 110, 155, 16, WHITE);
+		}else{
+			//tft.fillRect(279, 110, 1, 1, WHITE);
+			tft.setCursor(290, 55);
+		/*	tft.setTextColor(MAGENTA);  tft.setTextSize(3);
+			tft.println("PRACUJEM");
+			tft.fillRect(267, 100, 180, 100, BLACK);
+			tft.fillRect(279, 110, 155, 16, WHITE);
+			tft.fillRect(279, 131, 155, 16, WHITE);*/
+
+		}
+
+			//Garaz zatvorena text + obrazok
+			if(!msg.b_1.v.b_01){
+				tft.setCursor(280, 55);
+				tft.setTextColor(RED);  tft.setTextSize(3);
+				tft.println("Zatvorena");
+				tft.fillRect(267, 100, 180, 100, BLACK);
+				tft.fillRect(279, 110, 155, 16, WHITE);
+				tft.fillRect(279, 131, 155, 16, WHITE);
+				tft.fillRect(279, 152, 155, 16, WHITE);
+				tft.fillRect(279, 173, 155, 16, WHITE);
+				}else{
+				//tft.fillRect(279, 11, 1, 1, WHITE);
+				tft.setCursor(290, 55);
+				/*tft.setTextColor(MAGENTA);  tft.setTextSize(3);
+				tft.println("PRACUJEM");
+				tft.fillRect(267, 100, 180, 100, BLACK);
+				tft.fillRect(279, 110, 155, 16, WHITE);
+				tft.fillRect(279, 131, 155, 16, WHITE);*/
+			}
+
+			//Garaz pracuje
+			if(!msg.b_1.v.b_01 || !msg.b_1.v.b_00){
+				tft.fillRect(279, 110, 1, 1, WHITE);
+			}else{
+				tft.setCursor(290, 55);
+				tft.setTextColor(MAGENTA);  tft.setTextSize(3);
+				tft.println("PRACUJEM");
+				tft.fillRect(267, 100, 180, 100, BLACK);
+				tft.fillRect(279, 110, 155, 16, WHITE);
+				tft.fillRect(279, 131, 155, 16, WHITE);
+
+			}
+
+}
+
+//--------------------------------------------------------------
+void kresli_blok_3(){ //TEPLOTA IZBY
 
   //vykreslenie oblého štvorca
   //(osa X, osa Y, rozmery X, Rozmery Y, zaoblenie, farba)
@@ -262,12 +283,18 @@ void funk3(){ //TEPLOTA IZBY
   tft.setTextColor(BLACK); tft.setTextSize(4);
   tft.println("Teplota izby");
 
+}
+
+void funk3(){ //TEPLOTA IZBY
+//	tft.fillRect(200, 265, 90, 30, BLUE);
+
   sprintf(string, "Aktualna  %s C", String(msg.v_1.v).c_str());
   tft.setCursor(10,265);
   tft.setTextColor(BLACK); tft.setTextSize(3);
   tft.println(string);
   Serial.println(string);
 
+//	tft.fillRect(200, 292, 90, 30, BLUE);
   sprintf(string,"Nastavena %s C", String(msg.v_2.v).c_str());
 tft.setCursor(10,292);
   tft.setTextColor(MAGENTA); tft.setTextSize(3);
@@ -340,9 +367,12 @@ pinMode(LED_18, OUTPUT);
   Serial.println(string);
   //nastavi displej
   setup_lcd();
-  funk1();
-  funk2();
-  funk3();
+  kresli_blok_1();
+	funk1();
+  kresli_blok_2();
+	funk2();
+	kresli_blok_3();
+	funk3();
 
 }
 
@@ -406,21 +436,26 @@ void  odoslat_data(){
   }else{
     digitalWrite(RELE5_PIN_33, LOW);    //relé5 zapnute
   }
+
+
+	//-----------------------------------------------------------
+
+
+
 }
 
+	void  urobit_prepocty(){
+	   // přepočet analogové hodnoty z celého rozsahu
+	  //  0-1023 na procentuální rozsah 0-100
+	  prepocet = map(analogHodnota, 0, 1023, 0, 100);
 
-void  urobit_prepocty(){
-   // přepočet analogové hodnoty z celého rozsahu
-  //  0-1023 na procentuální rozsah 0-100
-  prepocet = map(analogHodnota, 0, 1023, 0, 100);
-
-  msg.v_3.v = analogHodnota / 1023 * 100;
-	// zapnutie LED
-	if(msg.v_3.v < 20.0){
-		msg.b_3.v.b_00 = true;
-	}else{
-		msg.b_3.v.b_00 = false;
-	}
+	  msg.v_3.v = analogHodnota / 1023 * 100;
+		// zapnutie LED
+		if(msg.v_3.v < 20.0){
+			msg.b_3.v.b_00 = true;
+		}else{
+			msg.b_3.v.b_00 = false;
+		}
 }
 
 void loop(){
@@ -448,13 +483,15 @@ void loop(){
     Serial.println(" | V okolí je málo svetla.");
   }
 
-
+//vyhodnotenie jasu
   if(last_msg.v_3.v != msg.v_3.v){
     funk1();
   }
+	//vyhodnotenie garazovych dveri
   if((last_msg.b_1.v.b_00 != msg.b_1.v.b_00) || (last_msg.b_1.v.b_01 != msg.b_1.v.b_01)){
     funk2();
   }
+	//vyhodnotenie teploty v izbe
   if((last_msg.v_1.v != msg.v_1.v) || (last_msg.v_2.v != msg.v_2.v)){
     funk3();
   }
@@ -469,5 +506,5 @@ void loop(){
   Serial.print(" ZAT: ");Serial.println(msg.b_1.v.b_01);
 
   // pauza
-  delay(500);
+delay(1000);
 }
