@@ -75,6 +75,7 @@ Telegram::getUint16(num){
 		}else{
 			return undefined;
 		}
+		
 }
 //prekonvertuje telegram do char retazca ukonceneho '\x00'
 //buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
