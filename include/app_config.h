@@ -1,44 +1,115 @@
-#ifndef __APP_CONFIG_HANDLER_H__
-#define __APP_CONFIG_HANDLER_H__
+#include "easy_code.h"
+#include <Arduino.h>
 
-// nastavení čísla prepojovanieho pinu
-#define analogPin A6
-// nastavenie led
-#define LED_18 18
-//kontakty pre vstupy
-#define INPUT_PIN_16 16
-#define INPUT_PIN_17 17
+//-----------------------------------------------------------
+// prekontroluje ci je telegram validny
+// vrati true ak je validny, false ak nevalidny
+bool isValidTelegram(const TELEGRAM *msg) {
+  if (msg->stx != STX)
+    return false;
+  if (msg->etx != ETX)
+    return false;
+  return true;
+}
 
-//konstanty pre relatka
-#define RELE0_PIN_23 23
-#define RELE1_PIN_25 25
-#define RELE2_PIN_27 27
-#define RELE3_PIN_29 29
-#define RELE4_PIN_31 31
-#define RELE5_PIN_33 33
+// prekonvertuje telegram do char retazca ukonceneho '\x00'
+// buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
+// buffer - pole znakov kam sa bude konvertovat
+// msg - struktura telegramu
+// len - velkost struktury telegramu v bajtoch; sizeof(TELEGRAM)
+void encodeTelegram(byte *buffer, const TELEGRAM *msg, const int len) {
+  byte *b_msg = (byte *)msg;
+  byte *buf = buffer;
+  byte a, b;
 
-//konstanty pre displej
+  for (int i = 0; i < len; i++, b_msg++) {
+    a = *b_msg & 0x0F;
+    b = (*b_msg & 0xF0) >> 4;
+    *buf++ = a + ADD;
+    *buf++ = b + ADD;
+  }
+  *buf = '\x00';
+}
 
-#define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
-#define LCD_CS A3   // Chip Select goes to Analog 3
-#define LCD_CD A2  // Command/Data goes to Analog 2
-#define LCD_WR A1  // LCD Write goes to Analog 1
-#define LCD_RD A0 // LCD Read goes to Analog 0
+// prekonvertuje char retazec ukonceny '\x00' na telegram
+// buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
+// buffer - pole znakov odkial sa bude konvertovat
+// msg - struktura telegramu
+// len - velkost struktury telegramu v bajtoch; int len = sizeof(TELEGRAM);
+void decodeTelegram(TELEGRAM *msg, const int len, const byte *buffer) {
+  byte *b_msg = (byte *)msg;
+  byte *buf = buffer;
+  byte a, b;
 
-//konstanty pre koncoveé spínače
-#define pinD 14
-#define pinD 15
-//--------------------------------------------------------------
-// Farby
-#define	BLACK    0x0000
-#define	BLUE     0x001F
-#define	RED      0xF800
-#define	GREEN    0x07E0
-#define CYAN     0x07FF
-#define MAGENTA  0xF81F
-#define YELLOW   0xFFE0
-#define GREY     0x7BCF
-#define BLUGREEN 0x0B74
-#define WHITE    0xFFFF
+  for (int i = 0; i < len; i++, b_msg++) {
+    a = *buf++ - ADD;
+    b = *buf++ - ADD;
+    *b_msg = (a & 0x0F) | ((b & 0x0F) << 4);
+  }
+}
 
-#endif
+void test() {
+  Serial.print("velkost F_VALUE ma byt 4: ");
+  Serial.println(sizeof(F_VALUE));
+  Serial.print("velkost B_VALUE ma byt 2: ");
+  Serial.println(sizeof(B_VALUE));
+  Serial.print("velkost TELEGRAM ma byt 26: ");
+  Serial.println(sizeof(TELEGRAM));
+
+  TELEGRAM msg_orig;
+  msg_orig.stx = STX;
+  msg_orig.etx = ETX;
+  msg_orig.v_1.v = -99.99;
+  msg_orig.v_2.v = 99.99;
+  msg_orig.v_3.v = -25.25;
+  msg_orig.v_4.v = 25.25;
+  msg_orig.b_1.b[0] = 0xAA;
+  msg_orig.b_1.b[1] = 0x55;
+  msg_orig.b_2.b[0] = 0xAA;
+  msg_orig.b_2.b[1] = 0x55;
+  msg_orig.b_3.b[0] = 0xAA;
+  msg_orig.b_3.b[1] = 0x55;
+  msg_orig.b_4.b[0] = 0xAA;
+  msg_orig.b_4.b[1] = 0x55;
+
+  char buffer[2 * sizeof(TELEGRAM) + 1];
+  encodeTelegram(buffer, &msg_orig, sizeof(msg_orig));
+
+  Serial.print("zakodovany telegram: ");
+  Serial.println(buffer);
+  Serial.print("odkodovany telegram: ");
+  Serial.println((char *)&msg_orig);
+
+  TELEGRAM msg_copy;
+  decodeTelegram(&msg_copy, sizeof(msg_copy), buffer);
+  Serial.print("odkodovany telegram: ");
+  Serial.println((char *)&msg_copy);
+
+  byte *orig = (byte *)&msg_orig;
+  byte *copy = (byte *)&msg_copy;
+
+  for (int i = 0; i < sizeof(TELEGRAM); i++) {
+    if (orig[i] == copy[i]) {
+      Serial.print("   zhoda  : ");
+      Serial.println(i);
+    } else {
+      Serial.print("!! nezhoda: ");
+      Serial.print(orig[i]);
+      Serial.print(" : ");
+      Serial.print(copy[i]);
+      Serial.print(" : ");
+      Serial.println(i);
+    }
+  }
+  Serial.print("   msg_orig je validny  : ");
+  Serial.println(isValidTelegram(&msg_orig));
+  Serial.print("   msg_copy je validny  : ");
+  Serial.println(isValidTelegram(&msg_copy));
+}
+
+void setup() {
+  Serial.begin(115200); // opens serial port
+  test();
+}
+
+void loop() {}

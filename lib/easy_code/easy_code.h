@@ -1,104 +1,115 @@
-#ifndef __EASY_CODE_HANDLER_H__
-#define __EASY_CODE_HANDLER_H__
+#include "easy_code.h"
+#include <Arduino.h>
 
-typedef union {
-	struct {
-		word b_00: 1;
-		word b_01: 1;
-		word b_02: 1;
-		word b_03: 1;
-		word b_04: 1;
-		word b_05: 1;
-		word b_06: 1;
-		word b_07: 1;
-		word b_08: 1;
-		word b_09: 1;
-		word b_10: 1;
-		word b_11: 1;
-		word b_12: 1;
-		word b_13: 1;
-		word b_14: 1;
-		word b_15: 1;
-	} v;
-	word b;
-} B_VALUE;
+//-----------------------------------------------------------
+// prekontroluje ci je telegram validny
+// vrati true ak je validny, false ak nevalidny
+bool isValidTelegram(const TELEGRAM *msg) {
+  if (msg->stx != STX)
+    return false;
+  if (msg->etx != ETX)
+    return false;
+  return true;
+}
 
-//celkova bajtova velkost telegramu je: 2*1 + 10*2 + 2*1= 24 bytov
-typedef struct {
-	byte stx; //allways STX
-	byte len; //reserved
-//-------------------------------
-//payload
-//-------------------------------
-	B_VALUE b_0;//2 bytes
-	B_VALUE b_1;//2 bytes
-	B_VALUE b_2;//2 bytes
-	B_VALUE b_3;//2 bytes
-	B_VALUE b_4;//2 bytes
-	B_VALUE b_5;//2 bytes
-	B_VALUE b_6;//2 bytes
-	B_VALUE b_7;//2 bytes
-	B_VALUE b_8;//2 bytes
-	B_VALUE b_9;//2 bytes
-//-------------------------------
-//end of payload
-//-------------------------------
-	byte crc; //reserved
-	byte etx; //allways ETX
-} TELEGRAM;
+// prekonvertuje telegram do char retazca ukonceneho '\x00'
+// buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
+// buffer - pole znakov kam sa bude konvertovat
+// msg - struktura telegramu
+// len - velkost struktury telegramu v bajtoch; sizeof(TELEGRAM)
+void encodeTelegram(byte *buffer, const TELEGRAM *msg, const int len) {
+  byte *b_msg = (byte *)msg;
+  byte *buf = buffer;
+  byte a, b;
 
-class Telegram {
-	private:
-		TELEGRAM msg;
-		byte buffer[Telegram::BUF_LEN];
-	public:
-		static const byte MSG_LEN = sizeof(TELEGRAM);
-		static const byte BUF_LEN = MSG_LEN *2 +1;
-		//temp char
-		static const byte ADD = 0x41;
-		//start of telegram
-		static const byte STX = 0x02;
-		//end of telegram
-		static const byte ETX = 0x03;
-		//offset of first byte in telegram
-		static const byte START = 0;
-		//offset of last byte in telegram
-		static const byte STOP = MSG_LEN - 1;
+  for (int i = 0; i < len; i++, b_msg++) {
+    a = *b_msg & 0x0F;
+    b = (*b_msg & 0xF0) >> 4;
+    *buf++ = a + ADD;
+    *buf++ = b + ADD;
+  }
+  *buf = '\x00';
+}
 
-		Telegram();
-		//urobi vzpis pola telegram
-		void logTelegram(){};
-		//urobi vzpis pola Buffer
-		void logBuffer(){};
-		//vrati pole telegram
-		byte *getTelegram(){ return (byte *)&this->msg; };
-		//vrati pole Buffer
-		byte *getBuffer(){ return this->buffer; };
-		//prekonvertuje string typu ASCII do pola Buffer
-		void setBuffer(char *str);
-		//prekonvertuje string typu ASCII do pola Telegram
-		void setTelegram(char *str);
-		//nastavi Uint8 hodnotu v poli TELEGRAM
-		void setByteInTelegram(int num, byte val);
-		//vrati Uint8 hodnotu v poli Telegram
-		byte getByteInTelegram(int num);
-		// nastavi Uint8 hodnotu v poli buffer
-		void setByteInBuffer(int num, byte val);
-		//vrati Uint8 hodnotu v poli Buffer
-		byte getByteInBuffer(int num);
-		//vrati Uint16 hodnotu z payload pola
-		//num index v poli
-		word getUint16(int );
-		//nastavi Uint16 hodnotu z payload pola
-		//num index v poli
-		void setUint16(int num, word val);
-		//prekontroluje ci je telegram validny
-		// vrati true ak je validny, false ak nevalidny
-		bool isValidTelegram();
-		//prekonvertuje telegram do char retazca
-		void encodeTelegram();
-		//prekonvertuje char retazec ukonceny '\x00' na telegram
-		void decodeTelegram();
-};
+// prekonvertuje char retazec ukonceny '\x00' na telegram
+// buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
+// buffer - pole znakov odkial sa bude konvertovat
+// msg - struktura telegramu
+// len - velkost struktury telegramu v bajtoch; int len = sizeof(TELEGRAM);
+void decodeTelegram(TELEGRAM *msg, const int len, const byte *buffer) {
+  byte *b_msg = (byte *)msg;
+  byte *buf = buffer;
+  byte a, b;
 
-#endif
+  for (int i = 0; i < len; i++, b_msg++) {
+    a = *buf++ - ADD;
+    b = *buf++ - ADD;
+    *b_msg = (a & 0x0F) | ((b & 0x0F) << 4);
+  }
+}
+
+void test() {
+  Serial.print("velkost F_VALUE ma byt 4: ");
+  Serial.println(sizeof(F_VALUE));
+  Serial.print("velkost B_VALUE ma byt 2: ");
+  Serial.println(sizeof(B_VALUE));
+  Serial.print("velkost TELEGRAM ma byt 26: ");
+  Serial.println(sizeof(TELEGRAM));
+
+  TELEGRAM msg_orig;
+  msg_orig.stx = STX;
+  msg_orig.etx = ETX;
+  msg_orig.v_1.v = -99.99;
+  msg_orig.v_2.v = 99.99;
+  msg_orig.v_3.v = -25.25;
+  msg_orig.v_4.v = 25.25;
+  msg_orig.b_1.b[0] = 0xAA;
+  msg_orig.b_1.b[1] = 0x55;
+  msg_orig.b_2.b[0] = 0xAA;
+  msg_orig.b_2.b[1] = 0x55;
+  msg_orig.b_3.b[0] = 0xAA;
+  msg_orig.b_3.b[1] = 0x55;
+  msg_orig.b_4.b[0] = 0xAA;
+  msg_orig.b_4.b[1] = 0x55;
+
+  char buffer[2 * sizeof(TELEGRAM) + 1];
+  encodeTelegram(buffer, &msg_orig, sizeof(msg_orig));
+
+  Serial.print("zakodovany telegram: ");
+  Serial.println(buffer);
+  Serial.print("odkodovany telegram: ");
+  Serial.println((char *)&msg_orig);
+
+  TELEGRAM msg_copy;
+  decodeTelegram(&msg_copy, sizeof(msg_copy), buffer);
+  Serial.print("odkodovany telegram: ");
+  Serial.println((char *)&msg_copy);
+
+  byte *orig = (byte *)&msg_orig;
+  byte *copy = (byte *)&msg_copy;
+
+  for (int i = 0; i < sizeof(TELEGRAM); i++) {
+    if (orig[i] == copy[i]) {
+      Serial.print("   zhoda  : ");
+      Serial.println(i);
+    } else {
+      Serial.print("!! nezhoda: ");
+      Serial.print(orig[i]);
+      Serial.print(" : ");
+      Serial.print(copy[i]);
+      Serial.print(" : ");
+      Serial.println(i);
+    }
+  }
+  Serial.print("   msg_orig je validny  : ");
+  Serial.println(isValidTelegram(&msg_orig));
+  Serial.print("   msg_copy je validny  : ");
+  Serial.println(isValidTelegram(&msg_copy));
+}
+
+void setup() {
+  Serial.begin(115200); // opens serial port
+  test();
+}
+
+void loop() {}
