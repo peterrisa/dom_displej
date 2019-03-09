@@ -47,6 +47,76 @@ Telegram::Telegram(){
 	setByteInTelegram(Telegram::STOP,Telegram::ETX);
 }
 
+void Telegram::setBuffer(char *str){
+	byte *src = str;
+	byte *dst = (byte *)&this.getBuffer()[0];
+	for(int i=0; i<Telegram.BUF_LEN; i++){
+		if(*src != 0x00){
+			*dst = *src;
+			dst++;
+			src++;
+		}else{
+			break;
+		}
+	}
+
+void Telegram::setTelegram(char *str){
+	byte *src = str;
+	byte *dst = (byte *)&this.getTelegram()[0];
+	for(int i=0; i<Telegram.MSG_LEN; i++){
+		if(*src != 0x00){
+			*dst = *src;
+			dst++;
+			src++;
+		}else{
+			break;
+		}
+	}
+
+	var telegram = new DataView(this.getTelegram(), 0, Telegram.MSG_LEN);
+
+		const buf = Buffer.from(str, 'ascii');
+		var i = 0;
+		for (const b of buf) {
+			if(i < Telegram.MSG_LEN){
+				telegram.setUint8(i, b);
+			}
+			i++;
+		}
+}
+
+//nastavi Uint8 hodnotu v poli TELEGRAM
+void Telegram::setByteInTelegram(int num, byte val){
+	if( (num >= 0) && (num < Telegram::MSG_LEN)){
+			byte *uint8 = (byte *)&this.getTelegram()[0];
+			uint8[num] = val;
+	}
+}
+//vrati Uint8 hodnotu v poli Telegram
+byte Telegram::getByteInTelegram(int num){
+	if( (num >= 0) && (num < Telegram::MSG_LEN)){
+			byte *uint8 = (byte *)&this.getTelegram()[0];
+		return uint8[num];
+	}
+	return 0;
+}
+
+// nastavi Uint8 hodnotu v poli buffer
+void Telegram::setByteInBuffer(int num, byte val){
+	if( (num >= 0) && (num < Telegram::BUF_LEN)){
+			byte *uint8 = (byte *)&this.getBuffer()[0];
+			uint8[num] = val;
+		}
+}
+//vrati Uint8 hodnotu v poli Buffer
+byte Telegram::getByteInBuffer(int num){
+	if( (num >= 0) && (num < Telegram::BUF_LEN)){
+			byte *uint8 = (byte *)&this.getBuffer()[0];
+			return uint8[num];
+		}
+	return 0;
+}
+
 //-----------------------------------------------------------
 //prekontroluje ci je telegram validny
 // vrati true ak je validny, false ak nevalidny
@@ -59,23 +129,23 @@ bool Telegram::isValidTelegram(){
 }
 
 
-Telegram::getUint16(num){
-		if( !isNaN(num) && (num < 10) && (num >= 0)){
-			var uint16 = new Uint16Array(this.getTelegram(), 2, 10);
-			return uint16[num];
-		}else{
-			return undefined;
-		}
+	word Telegram::getUint16(num){
+		if( (num < 10) && (num >= 0)){
+			word *uint16 = (word *)&this.getTelegram()[2];
+				return uint16[num];
+			}else{
+				return undefined;
+			}
 	}
 
-	Telegram::setUint16(num, val){
-		if( !isNaN(num) && (num < 10) && (num >= 0)){
-			var uint16 = new Uint16Array(this.getTelegram(), 2, 10);
+	void Telegram::void setUint16(int num, word val){
+		if( (num < 10) && (num >= 0)){
+			word *uint16 = (word *)&this.getTelegram()[2];
 			return uint16[num] = val;
 		}else{
-			return undefined;
+			return;
 		}
-		
+
 }
 //prekonvertuje telegram do char retazca ukonceneho '\x00'
 //buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov

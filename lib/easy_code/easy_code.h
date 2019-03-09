@@ -67,13 +67,13 @@ class Telegram {
 
 		Telegram();
 		//urobi vzpis pola telegram
-		void logTelegram();
+		void logTelegram(){};
 		//urobi vzpis pola Buffer
-		void logBuffer();
+		void logBuffer(){};
 		//vrati pole telegram
-		byte *getTelegram();
+		byte *getTelegram(){ return (byte *)&this->msg; };
 		//vrati pole Buffer
-		byte *getBuffer();
+		byte *getBuffer(){ return this->buffer; };
 		//prekonvertuje string typu ASCII do pola Buffer
 		void setBuffer(char *str);
 		//prekonvertuje string typu ASCII do pola Telegram
