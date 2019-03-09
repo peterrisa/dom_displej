@@ -37,66 +37,64 @@
 #include <easy_code.h>
 #include "app_config.h"
 
-//--------------------------------------------------------------
-//celkova bajtova velkost telegramu je: 1*2 + 4*4 + 4*2 = 26 bytov
-/*
-typedef struct {
-	byte stx; //allways STX
-//-------------------------------
-//payload
-//-------------------------------
-	F_VALUE v_1;//4 bytes
-	F_VALUE v_2;//4 bytes
-	F_VALUE v_3;//4 bytes
-	F_VALUE v_4;//4 bytes
-	B_VALUE b_1;//2 bytes
-	B_VALUE b_2;//2 bytes
-	B_VALUE b_3;//2 bytes
-	B_VALUE b_4;//2 bytes
-//-------------------------------
-//end of payload
-//-------------------------------
-//	byte CRC1;
-//	byte CRC2;
-//-------------------------------
-//shoud be CRC check
-//-------------------------------
-	byte etx; //allways ETX
-} TELEGRAM;
-*/
-//vymenny datovy system medzi arduinom a nodejs cez seriovu linku
-TELEGRAM msg;
-//datovy vymenny buffer
-char buffer[2*sizeof(TELEGRAM)+1];
+Telegram telegram;
+
+Telegram::Telegram(){
+	//preset telegram header
+	setByteInTelegram(Telegram::START,Telegram::STX);
+	//preset telegram footer
+	setByteInTelegram(Telegram::STOP,Telegram::ETX);
+}
 
 //-----------------------------------------------------------
 //prekontroluje ci je telegram validny
 // vrati true ak je validny, false ak nevalidny
-bool isValidTelegram(const TELEGRAM *msg){
-	if(msg->stx != STX)
+bool Telegram::isValidTelegram(){
+	if(msg.stx != Telegram::STX)
 		return false;
-	if(msg->etx != ETX)
+	if(msg.etx != Telegram::ETX)
 		return false;
 	return true;
 }
 
+
+Telegram::getUint16(num){
+		if( !isNaN(num) && (num < 10) && (num >= 0)){
+			var uint16 = new Uint16Array(this.getTelegram(), 2, 10);
+			return uint16[num];
+		}else{
+			return undefined;
+		}
+	}
+
+	Telegram::setUint16(num, val){
+		if( !isNaN(num) && (num < 10) && (num >= 0)){
+			var uint16 = new Uint16Array(this.getTelegram(), 2, 10);
+			return uint16[num] = val;
+		}else{
+			return undefined;
+		}
+}
 //prekonvertuje telegram do char retazca ukonceneho '\x00'
 //buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
 //buffer - pole znakov kam sa bude konvertovat
 //msg - struktura telegramu
 //len - velkost struktury telegramu v bajtoch; sizeof(TELEGRAM)
-void encodeTelegram(byte *buffer, const TELEGRAM *msg, const int len){
-	byte *b_msg = (byte *)msg;
-	byte *buf = buffer;
-  byte a,b;
+void Telegram::encodeTelegram(){
+	byte *b_msg = (byte *)&this->msg;
+	byte *buf = this->buffer;
+  byte a,b,c;
 
-	for(int i = 0; i < len; i++, b_msg++){
-    a = *b_msg & 0x0F;
-    b = (*b_msg & 0xF0) >> 4;
-    *buf++ = a + ADD;
-    *buf++ = b + ADD;
+	for( int i=0, j=0; i < Telegram::MSG_LEN; i++ ){
+		c = b_msg[i];
+		a = c & 0x0F;
+		b = (c >> 4) & 0x0F;
+		buf[j] = (a + Telegram::ADD) & 0xFF;
+		j++;
+		buf[j] = (b + Telegram::ADD) & 0xFF;
+		j++;
 	}
-  *buf = '\x00';
+	buf[j] = 0x00;
 }
 
 //prekonvertuje char retazec ukonceny '\x00' na telegram
@@ -104,16 +102,21 @@ void encodeTelegram(byte *buffer, const TELEGRAM *msg, const int len){
 //buffer - pole znakov odkial sa bude konvertovat
 //msg - struktura telegramu
 //len - velkost struktury telegramu v bajtoch; int len = sizeof(TELEGRAM);
-void decodeTelegram(TELEGRAM *msg, const int len, const byte *buffer){
-  byte *b_msg = (byte *)msg;
-  byte *buf = buffer;
-  byte a,b;
+void Telegram::
 
-  for(int i = 0; i < len; i++, b_msg++){
-    a = *buf++ - ADD;
-    b = *buf++ - ADD;
-    *b_msg = (a & 0x0F) | ((b & 0x0F)<<4);
-  }
+
+decodeTelegram(){
+  byte *b_msg = (byte *)&this->msg;
+  byte *buf = this->buffer;
+  byte a,b,c;
+
+	for( var i=0, j=0; i < Telegram::MSG_LEN; i++ ){
+		a = (buf[j] - Telegram::ADD) & 0x0F;
+		j++;
+		b = (buf[j] - Telegram::ADD) & 0x0F;
+		j++;
+		b_msg[i] = a | (b << 4);
+	}
 }
 
 //--------------------------------------------------------------
@@ -292,14 +295,12 @@ void funk3(){ //TEPLOTA IZBY
   tft.setCursor(10,265);
   tft.setTextColor(BLACK); tft.setTextSize(3);
   tft.println(string);
-  Serial.println(string);
 
 //	tft.fillRect(200, 292, 90, 30, BLUE);
   sprintf(string,"Nastavena %s C", String(msg.v_2.v).c_str());
 tft.setCursor(10,292);
   tft.setTextColor(MAGENTA); tft.setTextSize(3);
   tft.println(string);
-  Serial.println(string);
 
 /*tft.setCursor(330,270);
   tft.setTextColor(BLUE); tft.setTextSize(4);
@@ -363,8 +364,6 @@ pinMode(LED_18, OUTPUT);
   // rychlostí 115200 baud
   Serial.begin(115200);
 
-
-  Serial.println(string);
   //nastavi displej
   setup_lcd();
   kresli_blok_1();
@@ -382,7 +381,6 @@ void  nacitaj_data(){
 
   //nacitaj stav tlacitok
   //nastavenie koncovych poloh garaze
-	Serial.println(digitalRead(INPUT_PIN_16));
   if( digitalRead(INPUT_PIN_16) == HIGH ){
     msg.b_1.v.b_00 = true; //kontakt otvorene true
   }else{
@@ -436,12 +434,6 @@ void  odoslat_data(){
   }else{
     digitalWrite(RELE5_PIN_33, LOW);    //relé5 zapnute
   }
-
-
-	//-----------------------------------------------------------
-
-
-
 }
 
 	void  urobit_prepocty(){
@@ -471,17 +463,6 @@ void loop(){
   urobit_prepocty();
 
 // zobrazit data na displej
-  // výpis načtených dat po sériové lince
-  Serial.print("Načítaná hodnota: ");
-  Serial.print(analogHodnota);
-  Serial.print(", v percentách: ");
-  Serial.print(prepocet);
-  if (prepocet > 50) {
-    Serial.println(" | V okolí je dostatok svetla.");
-  }
-  else {
-    Serial.println(" | V okolí je málo svetla.");
-  }
 
 //vyhodnotenie jasu
   if(last_msg.v_3.v != msg.v_3.v){
@@ -501,9 +482,6 @@ void loop(){
   //odoslat data do servera
   encodeTelegram(buffer, &msg, sizeof(msg));
   Serial.println(buffer);
-
-  Serial.print(" OTV: ");Serial.println(msg.b_1.v.b_00);
-  Serial.print(" ZAT: ");Serial.println(msg.b_1.v.b_01);
 
   // pauza
 delay(1000);
