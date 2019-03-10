@@ -51,12 +51,12 @@
 //} TELEGRAM;
 
 // Knižnice
+#include "app_config.h"
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD.h> // Hardware-specific library
+#include <DallasTemperature.h>
 #include <MCUFRIEND_kbv.h>
 #include <OneWire.h>
-#include <DallasTemperature.h>
-#include "app_config.h"
 #include <easy_code.h>
 
 Telegram telegram;
@@ -177,12 +177,12 @@ void Telegram::decodeTelegram() {
 }
 
 //--------------------------------------------------------------
-//nastavenia pre teplomery
+// nastavenia pre teplomery
 // vytvoření instance oneWireDS z knihovny OneWire
-OneWire  oneWireDS(PIN_DS);  // teplomery sú na pine 13
+OneWire oneWireDS(PIN_DS); // teplomery sú na pine 13
 // vytvoření instance senzoryDS z knihovny DallasTemperature
 DallasTemperature senzoryDS(&oneWireDS);
-int num_temp = 0; //pocet teplomerov pripojenych
+int num_temp = 0; // pocet teplomerov pripojenych
 byte addr[MAX_DS1820_SENSORS][8];
 char buf[20];
 // koľko môže byť DS18S20 teplomerov pripojených
@@ -193,7 +193,7 @@ char buf[20];
 // teplota[2] = T3 - teplota okolia
 float teplota[MAX_DS1820_SENSORS];
 //--------------------------------------------------------------
-//nastavenia pre displej
+// nastavenia pre displej
 char string[256];
 
 MCUFRIEND_kbv tft;
@@ -392,11 +392,11 @@ void funk3() { // TEPLOTA IZBY
 void setup() {
 
   // nastavenie datovej struktury
-  telegram.msg.stx = Telegram::STX;            // povinna konstanta
-  telegram.msg.etx = Telegram::ETX;            // povinna konstanta
-  telegram.msg.b_0.b = 10; // prednastaneva teplota
-  telegram.msg.b_1.b = 0; // aktualna teplota
-  telegram.msg.b_2.b = 0;  // detektor svetla
+  telegram.msg.stx = Telegram::STX; // povinna konstanta
+  telegram.msg.etx = Telegram::ETX; // povinna konstanta
+  telegram.msg.b_0.b = 10;          // prednastaneva teplota
+  telegram.msg.b_1.b = 0;           // aktualna teplota
+  telegram.msg.b_2.b = 0;           // detektor svetla
   // nastavenie koncovych poloh garaze
   telegram.msg.b_8.v.b_03 = false; // kontakt otvorene
   telegram.msg.b_8.v.b_04 = false; // kontakt zatvorene
@@ -409,13 +409,16 @@ void setup() {
   telegram.msg.b_8.v.b_09 = false; // ochrana zapnuta
   // relatka
   telegram.msg.b_8.v.b_10 = false; // rele_0
-  telegram.msg.b_8.v.b_11 = true; // rele_1
+  telegram.msg.b_8.v.b_11 = true;  // rele_1
   telegram.msg.b_8.v.b_12 = false; // rele_2
-  telegram.msg.b_8.v.b_13 = true; // rele_3
+  telegram.msg.b_8.v.b_13 = true;  // rele_3
   telegram.msg.b_8.v.b_14 = false; // rele_4
-  telegram.msg.b_8.v.b_15 = true; // rele_5
+  telegram.msg.b_8.v.b_15 = true;  // rele_5
   // LED
   telegram.msg.b_8.v.b_00 = false; // zapnutie svetla
+  // commandy
+  telekom.msg.b_6.b = 30; // ziadne prikazy z nadradeneho servera
+  telekom.msg.b_9.b = 0;  // ziadne prikazy z nadradeneho servera
 
   // nastvanie vstupov
   pinMode(INPUT_PIN_16, INPUT);
@@ -433,15 +436,15 @@ void setup() {
 
   // začni komunikovať s teplomermi
   senzoryDS.begin();
-  for(int i=0; i < MAX_DS1820_SENSORS; i++) {
-     if (!oneWireDS.search(addr[i])) {
-         oneWireDS.reset_search();
-         delay(250);
-         break;
-     }
-     num_temp ++; // počet teplomerov zvýš o 1
-     delay(500);
-   }
+  for (int i = 0; i < MAX_DS1820_SENSORS; i++) {
+    if (!oneWireDS.search(addr[i])) {
+      oneWireDS.reset_search();
+      delay(250);
+      break;
+    }
+    num_temp++; // počet teplomerov zvýš o 1
+    delay(500);
+  }
 
   // zahájení komunikace po sériové lince
   // rychlostí 115200 baud
@@ -457,7 +460,7 @@ void setup() {
   funk3();
 }
 
-void nacitaj_data() {
+void nacitat_data() {
   // načtení hodnoty z analogového pinu
   // Světelný senzor TEMT6000
   // vytvoření proměnných pro výsledky měření
@@ -467,15 +470,15 @@ void nacitaj_data() {
   int prepocet = map(analogHodnota, 0, 1023, 0, 100);
   telegram.msg.b_2.b = (word)prepocet;
 
-    //TEPLOMER
-    // načíta všetky teplomery
-    senzoryDS.requestTemperatures();
-    // uloží teploty do poľa teplota
-    for (byte sensor = 0; sensor < num_temp; sensor++) {
-        teplota[sensor]=senzoryDS.getTempCByIndex(sensor);
-      }
-      //priradi aktualnu teplotu do telegramu
-    telegram.msg.b_1.b = teplota[0];
+  // TEPLOMER
+  // načíta všetky teplomery
+  senzoryDS.requestTemperatures();
+  // uloží teploty do poľa teplota
+  for (byte sensor = 0; sensor < num_temp; sensor++) {
+    teplota[sensor] = senzoryDS.getTempCByIndex(sensor);
+  }
+  // priradi aktualnu teplotu do telegramu
+  telegram.msg.b_1.b = teplota[0];
 
   // nacitaj stav tlacitok
   // nastavenie koncovych poloh garaze
@@ -535,8 +538,8 @@ void odoslat_data() {
 }
 
 void urobit_prepocty() {
- // vyhodnotit osvit
- int i_val = (int)telegram.msg.b_2.b;
+  // vyhodnotit osvit
+  int i_val = (int)telegram.msg.b_2.b;
 
   // zapnutie LED
   if (i_val < 20) {
@@ -544,15 +547,37 @@ void urobit_prepocty() {
   } else {
     telegram.msg.b_8.v.b_00 = false;
   }
+  // prikazy z nadradeneho systemu
+  if (telegram.msg.b_6.b) {
+    telegram.msg.b_0.b = telegram.msg.b_6.b;
+  }
+  if (telegram.msg.b_9.b) {
+    // tu bude logika pre riadenie motorov
+  }
 }
 
 void loop() {
   // zapametaj predosly stav periferii
-  TELEGRAM last_msg;
+  TELEGRAM last_msg, new_msg;
   memcpy(&last_msg, &telegram.msg, sizeof(telegram.msg));
-
-  // nacita data z periferii do struktury data
-  nacitaj_data();
+  // nacitaj data zo serioveho portu
+  if (Serial.available() >= Telegram::BUF_LEN) {
+    for (int i = 0; i < Telegram::BUF_LEN; i++) {
+      byte c = Serial.read();
+      new_msg.setByteInBuffer(i, c);
+    }
+    while (Serial.available()) {
+      byte c = Serial.read();
+    }
+    new_msg.decodeTelegram();
+    if (new_msg.isValidTelegram()) {
+      // prekopiruj cmd - prikazy zo servera pre Arduino
+      telegram.msg.b_9.b = new_msg.msg.b_9.b;
+      telegram.msg.b_6.b = new_msg.msg.b_6.b;
+    }
+  }
+  // nacita data zo vstupov Arduina
+  nacitat_data();
 
   // vyhodnot data, urob prepocty
   urobit_prepocty();
@@ -580,7 +605,7 @@ void loop() {
   odoslat_data();
   // odoslat data do servera
   telegram.encodeTelegram();
-  Serial.println((char*)telegram.getBuffer());
+  Serial.println((char *)telegram.getBuffer());
 
   // pauza
   delay(1000);
