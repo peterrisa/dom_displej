@@ -28,33 +28,34 @@
 //--------------------------------------------------------------
 
 // typedef struct {
-//	byte stx; //allways STX
-//	byte len; //reserved
+//  byte stx; // allways STX
+//  byte len; // reserved
 //-------------------------------
 // payload
 //-------------------------------
-//	B_VALUE b_0;//2 bytes -- setpoint teplota
-//	B_VALUE b_1;//2 bytes -- feedback telota
-//	B_VALUE b_2;//2 bytes -- feedback osvit
-//	B_VALUE b_3;//2 bytes
-//	B_VALUE b_4;//2 bytes
-//	B_VALUE b_5;//2 bytes
-//	B_VALUE b_6;//2 bytes
-//	B_VALUE b_7;//2 bytes
-//	B_VALUE b_8;//2 bytes	-- fdb
-//	B_VALUE b_9;//2 bytes -- cmd
+//  B_VALUE b_0; // 2 bytes -- setpoint teplota
+//  B_VALUE b_1; // 2 bytes -- skutocna teplota
+//  B_VALUE b_2; // 2 bytes -- aktualny osvit
+//  B_VALUE b_3; // 2 bytes
+//  B_VALUE b_4; // 2 bytes
+//  B_VALUE b_5; // 2 bytes
+//  B_VALUE b_6; // 2 bytes
+//  B_VALUE b_7; // 2 bytes
+//  B_VALUE b_8; // 2 bytes -- feedbacky
+//  B_VALUE b_9; // 2 bytes -- prikazy
 //-------------------------------
 // end of payload
 //-------------------------------
-//	byte crc; //reserved
-//	byte etx; //allways ETX
+//  byte crc; // reserved
+//  byte etx; // allways ETX
 //} TELEGRAM;
 
 // Knižnice
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD.h> // Hardware-specific library
 #include <MCUFRIEND_kbv.h>
-
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include "app_config.h"
 #include <easy_code.h>
 
@@ -66,62 +67,40 @@ Telegram::Telegram() {
   // preset telegram footer
   setByteInTelegram(Telegram::STOP, Telegram::ETX);
 }
-
+// prekonvertuje ascii string do bufferu
 void Telegram::setBuffer(char *str) {
-  byte *src = str;
-  byte *dst = (byte *)&this.getBuffer()[0];
-  for (int i = 0; i < Telegram.BUF_LEN; i++) {
-    if (*src != 0x00) {
-      *dst = *src;
-      dst++;
-      src++;
-    } else {
-      break;
-    }
-  }
+  strncpy((byte *)this->getBuffer(), str, Telegram::BUF_LEN);
 }
-
+// prekonvertuje ascii string do telegramu
 void Telegram::setTelegram(char *str) {
-  byte *src = str;
-  byte *dst = (byte *)&this.getTelegram()[0];
-  for (int i = 0; i < Telegram.MSG_LEN; i++) {
-    if (*src != 0x00) {
-      *dst = *src;
-      dst++;
-      src++;
-    } else {
-      break;
-    }
-  }
+  strncpy((byte *)this->getTelegram(), str, Telegram::MSG_LEN);
 }
-
 // nastavi Uint8 hodnotu v poli TELEGRAM
 void Telegram::setByteInTelegram(int num, byte val) {
   if ((num >= 0) && (num < Telegram::MSG_LEN)) {
-    byte *uint8 = (byte *)&this.getTelegram()[0];
+    byte *uint8 = (byte *)this->getTelegram();
     uint8[num] = val;
   }
 }
 // vrati Uint8 hodnotu v poli Telegram
 byte Telegram::getByteInTelegram(int num) {
   if ((num >= 0) && (num < Telegram::MSG_LEN)) {
-    byte *uint8 = (byte *)&this.getTelegram()[0];
+    byte *uint8 = (byte *)this->getTelegram();
     return uint8[num];
   }
   return 0;
 }
-
 // nastavi Uint8 hodnotu v poli buffer
 void Telegram::setByteInBuffer(int num, byte val) {
   if ((num >= 0) && (num < Telegram::BUF_LEN)) {
-    byte *uint8 = (byte *)&this.getBuffer()[0];
+    byte *uint8 = (byte *)this->getBuffer();
     uint8[num] = val;
   }
 }
 // vrati Uint8 hodnotu v poli Buffer
 byte Telegram::getByteInBuffer(int num) {
   if ((num >= 0) && (num < Telegram::BUF_LEN)) {
-    byte *uint8 = (byte *)&this.getBuffer()[0];
+    byte *uint8 = (byte *)this->getBuffer();
     return uint8[num];
   }
   return 0;
@@ -131,28 +110,28 @@ byte Telegram::getByteInBuffer(int num) {
 // prekontroluje ci je telegram validny
 // vrati true ak je validny, false ak nevalidny
 bool Telegram::isValidTelegram() {
-  if (msg.stx != Telegram::STX)
+  if (this->msg.stx != Telegram::STX)
     return false;
-  if (msg.etx != Telegram::ETX)
+  if (this->msg.etx != Telegram::ETX)
     return false;
   return true;
 }
 
-word Telegram::getUint16(num) {
+word Telegram::getUint16(int num) {
   if ((num < 10) && (num >= 0)) {
-    word *uint16 = (word *)&this.getTelegram()[2];
+    word *uint16 = (word *)this->getTelegram();
+    uint16 += 2;
     return uint16[num];
   } else {
-    return undefined;
+    return 0;
   }
 }
 
-void Telegram::void setUint16(int num, word val) {
+void Telegram::setUint16(int num, word val) {
   if ((num < 10) && (num >= 0)) {
-    word *uint16 = (word *)&this.getTelegram()[2];
-    return uint16[num] = val;
-  } else {
-    return;
+    word *uint16 = (word *)this->getTelegram();
+    uint16 += 2;
+    uint16[num] = val;
   }
 }
 // prekonvertuje telegram do char retazca ukonceneho '\x00'
@@ -161,11 +140,12 @@ void Telegram::void setUint16(int num, word val) {
 // msg - struktura telegramu
 // len - velkost struktury telegramu v bajtoch; sizeof(TELEGRAM)
 void Telegram::encodeTelegram() {
-  byte *b_msg = (byte *)&this->msg;
-  byte *buf = this->buffer;
+  byte *b_msg = (byte *)this->getTelegram();
+  byte *buf = (byte *)this->getBuffer();
   byte a, b, c;
+  int j = 0;
 
-  for (int i = 0, j = 0; i < Telegram::MSG_LEN; i++) {
+  for (int i = 0; i < Telegram::MSG_LEN; i++) {
     c = b_msg[i];
     a = c & 0x0F;
     b = (c >> 4) & 0x0F;
@@ -183,11 +163,11 @@ void Telegram::encodeTelegram() {
 // msg - struktura telegramu
 // len - velkost struktury telegramu v bajtoch; int len = sizeof(TELEGRAM);
 void Telegram::decodeTelegram() {
-  byte *b_msg = (byte *)&this->msg;
-  byte *buf = this->buffer;
+  byte *b_msg = (byte *)this->getTelegram();
+  byte *buf = (byte *)this->getBuffer();
   byte a, b, c;
 
-  for (var i = 0, j = 0; i < Telegram::MSG_LEN; i++) {
+  for (int i = 0, j = 0; i < Telegram::MSG_LEN; i++) {
     a = (buf[j] - Telegram::ADD) & 0x0F;
     j++;
     b = (buf[j] - Telegram::ADD) & 0x0F;
@@ -197,6 +177,23 @@ void Telegram::decodeTelegram() {
 }
 
 //--------------------------------------------------------------
+//nastavenia pre teplomery
+// vytvoření instance oneWireDS z knihovny OneWire
+OneWire  oneWireDS(PIN_DS);  // teplomery sú na pine 13
+// vytvoření instance senzoryDS z knihovny DallasTemperature
+DallasTemperature senzoryDS(&oneWireDS);
+int num_temp = 0; //pocet teplomerov pripojenych
+byte addr[MAX_DS1820_SENSORS][8];
+char buf[20];
+// koľko môže byť DS18S20 teplomerov pripojených
+
+// pole teplôt
+// teplota[0] = T1 - teplota kolektora
+// teplota[1] = T2 - teplota v bojleri
+// teplota[2] = T3 - teplota okolia
+float teplota[MAX_DS1820_SENSORS];
+//--------------------------------------------------------------
+//nastavenia pre displej
 char string[256];
 
 MCUFRIEND_kbv tft;
@@ -262,15 +259,16 @@ void kresli_blok_1() { // SVETLA
   tft.setTextSize(3);
   tft.println("Garaz");
 }
-
+// kresli jas
 void funk1() { // SVETLA
-
-  tft.fillRect(45, 165, 160, 30, WHITE);
-
+               // prekresli pozadie textu
+  tft.fillRect(45, 165, 170, 30, WHITE);
+  // nastav parametre textu
   tft.setCursor(45, 170);
   tft.setTextColor(GREY);
   tft.setTextSize(3);
-  sprintf(string, "Jas %s", String(msg.v_3.v).c_str());
+  // zobraz text s hodnotou osvitu
+  sprintf(string, "Jas %s", String((int)telegram.msg.b_2.b).c_str());
   tft.println(string);
 }
 
@@ -300,7 +298,7 @@ void funk2() { // GARAZ
   tft.println("Otvorena");*/
 
   // Garaz otvorena obrazok + text
-  if (!msg.b_1.v.b_00) {
+  if (!telegram.msg.b_8.v.b_03) {
     tft.setCursor(290, 55);
     tft.setTextColor(GREEN);
     tft.setTextSize(3);
@@ -318,7 +316,7 @@ void funk2() { // GARAZ
   }
 
   // Garaz zatvorena text + obrazok
-  if (!msg.b_1.v.b_01) {
+  if (!telegram.msg.b_8.v.b_04) {
     tft.setCursor(280, 55);
     tft.setTextColor(RED);
     tft.setTextSize(3);
@@ -339,7 +337,7 @@ void funk2() { // GARAZ
   }
 
   // Garaz pracuje
-  if (!msg.b_1.v.b_01 || !msg.b_1.v.b_00) {
+  if (!telegram.msg.b_8.v.b_03 || !telegram.msg.b_8.v.b_04) {
     tft.fillRect(279, 110, 1, 1, WHITE);
   } else {
     tft.setCursor(290, 55);
@@ -367,16 +365,16 @@ void kresli_blok_3() { // TEPLOTA IZBY
 }
 
 void funk3() { // TEPLOTA IZBY
-  //	tft.fillRect(200, 265, 90, 30, BLUE);
+  tft.fillRect(185, 265, 80, 50, WHITE);
 
-  sprintf(string, "Aktualna  %s C", String(msg.v_1.v).c_str());
+  sprintf(string, "Aktualna  %s C", String((int)telegram.msg.b_1.b).c_str());
   tft.setCursor(10, 265);
   tft.setTextColor(BLACK);
   tft.setTextSize(3);
   tft.println(string);
 
   //	tft.fillRect(200, 292, 90, 30, BLUE);
-  sprintf(string, "Nastavena %s C", String(msg.v_2.v).c_str());
+  sprintf(string, "Nastavena %s C", String((int)telegram.msg.b_0.b).c_str());
   tft.setCursor(10, 292);
   tft.setTextColor(MAGENTA);
   tft.setTextSize(3);
@@ -385,45 +383,39 @@ void funk3() { // TEPLOTA IZBY
   /*tft.setCursor(330,270);
     tft.setTextColor(BLUE); tft.setTextSize(4);
     tft.println("Chladi");*/
-  tft.setCursor(350, 270);
+  tft.setCursor(292, 275);
   tft.setTextColor(RED);
-  tft.setTextSize(4);
-  tft.println("Kuri");
+  tft.setTextSize(3.5);
+  tft.println("Prihrieva");
 }
-
-// Světelný senzor TEMT6000
-
-// vytvoření proměnných pro výsledky měření
-float analogHodnota;
-int prepocet;
 
 void setup() {
 
   // nastavenie datovej struktury
-  msg.stx = STX;    // povinna konstanta
-  msg.etx = ETX;    // povinna konstanta
-  msg.v_1.v = 20.0; // aktualna teplota
-  msg.v_2.v = 10.0; // prednastaneva teplota
-  msg.v_3.v = 0.0;  // detektor svetla
+  telegram.msg.stx = Telegram::STX;            // povinna konstanta
+  telegram.msg.etx = Telegram::ETX;            // povinna konstanta
+  telegram.msg.b_0.b = 10; // prednastaneva teplota
+  telegram.msg.b_1.b = 0; // aktualna teplota
+  telegram.msg.b_2.b = 0;  // detektor svetla
   // nastavenie koncovych poloh garaze
-  msg.b_1.v.b_00 = true;  // kontakt otvorene
-  msg.b_1.v.b_01 = false; // kontakt zatvorene
+  telegram.msg.b_8.v.b_03 = false; // kontakt otvorene
+  telegram.msg.b_8.v.b_04 = false; // kontakt zatvorene
   // koncove polohy zaluzie
-  msg.b_1.v.b_02 = true;  // kontakt otvorene
-  msg.b_1.v.b_03 = false; // kontakt zatvorene
+  telegram.msg.b_8.v.b_05 = false; // kontakt otvorene
+  telegram.msg.b_8.v.b_06 = false; // kontakt zatvorene
   // kurenie
-  msg.b_2.v.b_00 = false; // kurenie zapnute
-  msg.b_2.v.b_01 = false; // chladenie zapnute
-  msg.b_2.v.b_02 = false; // ochrana zapnuta
+  telegram.msg.b_8.v.b_07 = false; // kurenie zapnute
+  telegram.msg.b_8.v.b_08 = false; // chladenie zapnute
+  telegram.msg.b_8.v.b_09 = false; // ochrana zapnuta
   // relatka
-  msg.b_2.v.b_00 = true;  // rele_0
-  msg.b_2.v.b_01 = true;  // rele_1
-  msg.b_2.v.b_02 = false; // rele_2
-  msg.b_2.v.b_03 = false; // rele_3
-  msg.b_2.v.b_04 = true;  // rele_4
-  msg.b_2.v.b_05 = false; // rele_5
+  telegram.msg.b_8.v.b_10 = false; // rele_0
+  telegram.msg.b_8.v.b_11 = true; // rele_1
+  telegram.msg.b_8.v.b_12 = false; // rele_2
+  telegram.msg.b_8.v.b_13 = true; // rele_3
+  telegram.msg.b_8.v.b_14 = false; // rele_4
+  telegram.msg.b_8.v.b_15 = true; // rele_5
   // LED
-  msg.b_3.v.b_00 = false;
+  telegram.msg.b_8.v.b_00 = false; // zapnutie svetla
 
   // nastvanie vstupov
   pinMode(INPUT_PIN_16, INPUT);
@@ -438,6 +430,18 @@ void setup() {
   pinMode(RELE3_PIN_29, OUTPUT);
   pinMode(RELE4_PIN_31, OUTPUT);
   pinMode(RELE5_PIN_33, OUTPUT);
+
+  // začni komunikovať s teplomermi
+  senzoryDS.begin();
+  for(int i=0; i < MAX_DS1820_SENSORS; i++) {
+     if (!oneWireDS.search(addr[i])) {
+         oneWireDS.reset_search();
+         delay(250);
+         break;
+     }
+     num_temp ++; // počet teplomerov zvýš o 1
+     delay(500);
+   }
 
   // zahájení komunikace po sériové lince
   // rychlostí 115200 baud
@@ -455,59 +459,75 @@ void setup() {
 
 void nacitaj_data() {
   // načtení hodnoty z analogového pinu
-  analogHodnota = analogRead(analogPin);
+  // Světelný senzor TEMT6000
+  // vytvoření proměnných pro výsledky měření
+  float analogHodnota = analogRead(analogPin);
+  // přepočet analogové hodnoty z celého rozsahu
+  //  0-1023 na procentuální rozsah 0-100
+  int prepocet = map(analogHodnota, 0, 1023, 0, 100);
+  telegram.msg.b_2.b = (word)prepocet;
+
+    //TEPLOMER
+    // načíta všetky teplomery
+    senzoryDS.requestTemperatures();
+    // uloží teploty do poľa teplota
+    for (byte sensor = 0; sensor < num_temp; sensor++) {
+        teplota[sensor]=senzoryDS.getTempCByIndex(sensor);
+      }
+      //priradi aktualnu teplotu do telegramu
+    telegram.msg.b_1.b = teplota[0];
 
   // nacitaj stav tlacitok
   // nastavenie koncovych poloh garaze
   if (digitalRead(INPUT_PIN_16) == HIGH) {
-    msg.b_1.v.b_00 = true; // kontakt otvorene true
+    telegram.msg.b_8.v.b_03 = true; // kontakt otvorene true
   } else {
-    msg.b_1.v.b_00 = false; // kontakt otvorene false
+    telegram.msg.b_8.v.b_03 = false; // kontakt otvorene false
   }
   if (digitalRead(INPUT_PIN_17) == HIGH) {
-    msg.b_1.v.b_01 = true; // kontakt zatvorene true
+    telegram.msg.b_8.v.b_04 = true; // kontakt zatvorene true
   } else {
-    msg.b_1.v.b_01 = false; // kontakt zatvorene false
+    telegram.msg.b_8.v.b_04 = false; // kontakt zatvorene false
   }
 }
 
 void odoslat_data() {
-  if (msg.b_3.v.b_00) {
+  if (telegram.msg.b_8.v.b_00) {
     digitalWrite(LED_18, HIGH); // LED zapnute
   } else {
     digitalWrite(LED_18, LOW); // LED zapnute
   }
-  if (!msg.b_2.v.b_00) {
+  if (!telegram.msg.b_8.v.b_10) {
     digitalWrite(RELE0_PIN_23, HIGH); // relé0 rozopnute
   } else {
     digitalWrite(RELE0_PIN_23, LOW); // relé0 zapnute
   }
 
-  if (!msg.b_2.v.b_01) {
+  if (!telegram.msg.b_8.v.b_11) {
     digitalWrite(RELE1_PIN_25, HIGH); // relé1 rozopnute
   } else {
     digitalWrite(RELE1_PIN_25, LOW); // relé1 zapnute
   }
 
-  if (!msg.b_2.v.b_02) {
+  if (!telegram.msg.b_8.v.b_12) {
     digitalWrite(RELE2_PIN_27, HIGH); // relé1 rozopnute
   } else {
     digitalWrite(RELE2_PIN_27, LOW); // relé1 zapnute
   }
 
-  if (!msg.b_2.v.b_03) {
+  if (!telegram.msg.b_8.v.b_13) {
     digitalWrite(RELE3_PIN_29, HIGH); // relé1 rozopnute
   } else {
     digitalWrite(RELE3_PIN_29, LOW); // relé1 zapnute
   }
 
-  if (!msg.b_2.v.b_04) {
+  if (!telegram.msg.b_8.v.b_14) {
     digitalWrite(RELE4_PIN_31, HIGH); // relé1 rozopnute
   } else {
     digitalWrite(RELE4_PIN_31, LOW); // relé1 zapnute
   }
 
-  if (!msg.b_2.v.b_05) {
+  if (!telegram.msg.b_8.v.b_15) {
     digitalWrite(RELE5_PIN_33, HIGH); // relé5 rozopnute
   } else {
     digitalWrite(RELE5_PIN_33, LOW); // relé5 zapnute
@@ -515,23 +535,21 @@ void odoslat_data() {
 }
 
 void urobit_prepocty() {
-  // přepočet analogové hodnoty z celého rozsahu
-  //  0-1023 na procentuální rozsah 0-100
-  prepocet = map(analogHodnota, 0, 1023, 0, 100);
+ // vyhodnotit osvit
+ int i_val = (int)telegram.msg.b_2.b;
 
-  msg.v_3.v = analogHodnota / 1023 * 100;
   // zapnutie LED
-  if (msg.v_3.v < 20.0) {
-    msg.b_3.v.b_00 = true;
+  if (i_val < 20) {
+    telegram.msg.b_8.v.b_00 = true;
   } else {
-    msg.b_3.v.b_00 = false;
+    telegram.msg.b_8.v.b_00 = false;
   }
 }
 
 void loop() {
   // zapametaj predosly stav periferii
   TELEGRAM last_msg;
-  memcpy(&last_msg, &msg, sizeof(msg));
+  memcpy(&last_msg, &telegram.msg, sizeof(telegram.msg));
 
   // nacita data z periferii do struktury data
   nacitaj_data();
@@ -539,27 +557,30 @@ void loop() {
   // vyhodnot data, urob prepocty
   urobit_prepocty();
 
+  //-----------------------------------------------
   // zobrazit data na displej
+  //-----------------------------------------------
 
   // vyhodnotenie jasu
-  if (last_msg.v_3.v != msg.v_3.v) {
+  if (last_msg.b_2.b != telegram.msg.b_2.b) {
     funk1();
   }
   // vyhodnotenie garazovych dveri
-  if ((last_msg.b_1.v.b_00 != msg.b_1.v.b_00) ||
-      (last_msg.b_1.v.b_01 != msg.b_1.v.b_01)) {
+  if ((last_msg.b_8.v.b_03 != telegram.msg.b_8.v.b_03) ||
+      (last_msg.b_8.v.b_04 != telegram.msg.b_8.v.b_04)) {
     funk2();
   }
   // vyhodnotenie teploty v izbe
-  if ((last_msg.v_1.v != msg.v_1.v) || (last_msg.v_2.v != msg.v_2.v)) {
+  if ((last_msg.b_0.b != telegram.msg.b_0.b) ||
+      (last_msg.b_1.b != telegram.msg.b_1.b)) {
     funk3();
   }
 
   // odoslat data do periferii
   odoslat_data();
   // odoslat data do servera
-  encodeTelegram(buffer, &msg, sizeof(msg));
-  Serial.println(buffer);
+  telegram.encodeTelegram();
+  Serial.println((char*)telegram.getBuffer());
 
   // pauza
   delay(1000);
