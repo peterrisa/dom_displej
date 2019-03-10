@@ -107,12 +107,11 @@ public:
     word w;
   };
 
-  float cnv_W_F(const word w_val) {
+  float cnvWtoF(const word w_val) {
     union Cislo num;
     float f_val;
     num.w = w_val;
-    f_val = 0.0 + num.des;
-    f_val /= 1000.0;
+    f_val = 1.0 * num.des / 100.0;
     f_val += num.cele;
 
     if (num.sig)
@@ -122,17 +121,16 @@ public:
 
   // prekonvertuje cislo float do word
   //			-32768 32767
-  word cnv_F_W(const float f_val) {
+  word cnvFtoW(const float f_val) {
     union Cislo num;
-    float f = round(f_val * 1000) / 1000.0;
-    int i = f;
+    float f = round(f_val * 100.0) / 100.0;
+    int i = f_val;
     if (i < 0) {
       num.sig = 1;
     } else {
       num.sig = 0;
     }
-    f = (f - i) * 1000;
-    i = f;
+    i = (f - i) * 100.0;
     num.des = i;
     return num.w;
   };

@@ -250,9 +250,7 @@ void funk1() { // SVETLA
   tft.setTextColor(GREY);
   tft.setTextSize(3);
   // zobraz text s hodnotou osvitu
-  float f_val = telegram.cnv_W_F(telegram.msg.b_2.b);
-
-  sprintf(string, "Jas %s", String(f_val).c_str());
+  sprintf(string, "Jas %s", String((int)telegram.msg.b_2.b).c_str());
   tft.println(string);
 }
 
@@ -350,16 +348,14 @@ void kresli_blok_3() { // TEPLOTA IZBY
 
 void funk3() { // TEPLOTA IZBY
   //	tft.fillRect(200, 265, 90, 30, BLUE);
-  float f_val = telegram.cnv_W_F(telegram.msg.b_1.b);
-  sprintf(string, "Aktualna  %s C", String(f_val).c_str());
+  sprintf(string, "Aktualna  %s C", String((int)telegram.msg.b_1.b).c_str());
   tft.setCursor(10, 265);
   tft.setTextColor(BLACK);
   tft.setTextSize(3);
   tft.println(string);
 
   //	tft.fillRect(200, 292, 90, 30, BLUE);
-  f_val = telegram.cnv_W_F(telegram.msg.b_0.b);
-  sprintf(string, "Nastavena %s C", String(f_val).c_str());
+  sprintf(string, "Nastavena %s C", String((int)telegram.msg.b_0.b).c_str());
   tft.setCursor(10, 292);
   tft.setTextColor(MAGENTA);
   tft.setTextSize(3);
@@ -374,20 +370,14 @@ void funk3() { // TEPLOTA IZBY
   tft.println("Kuri");
 }
 
-// Světelný senzor TEMT6000
-
-// vytvoření proměnných pro výsledky měření
-float analogHodnota;
-int prepocet;
-
 void setup() {
 
   // nastavenie datovej struktury
   telegram.msg.stx = Telegram::STX;            // povinna konstanta
   telegram.msg.etx = Telegram::ETX;            // povinna konstanta
-  telegram.msg.b_0.b = telegram.cnv_F_W(20.0); // aktualna teplota
-  telegram.msg.b_1.b = telegram.cnv_F_W(10.0); // prednastaneva teplota
-  telegram.msg.b_2.b = telegram.cnv_F_W(0.0);  // detektor svetla
+  telegram.msg.b_0.b = 10; // prednastaneva teplota
+  telegram.msg.b_1.b = 20; // aktualna teplota
+  telegram.msg.b_2.b = 0;  // detektor svetla
   // nastavenie koncovych poloh garaze
   telegram.msg.b_8.v.b_03 = false; // kontakt otvorene
   telegram.msg.b_8.v.b_04 = false; // kontakt zatvorene
@@ -400,11 +390,11 @@ void setup() {
   telegram.msg.b_8.v.b_09 = false; // ochrana zapnuta
   // relatka
   telegram.msg.b_8.v.b_10 = false; // rele_0
-  telegram.msg.b_8.v.b_11 = false; // rele_1
+  telegram.msg.b_8.v.b_11 = true; // rele_1
   telegram.msg.b_8.v.b_12 = false; // rele_2
-  telegram.msg.b_8.v.b_13 = false; // rele_3
+  telegram.msg.b_8.v.b_13 = true; // rele_3
   telegram.msg.b_8.v.b_14 = false; // rele_4
-  telegram.msg.b_8.v.b_15 = false; // rele_5
+  telegram.msg.b_8.v.b_15 = true; // rele_5
   // LED
   telegram.msg.b_8.v.b_00 = false; // zapnutie svetla
 
@@ -438,7 +428,15 @@ void setup() {
 
 void nacitaj_data() {
   // načtení hodnoty z analogového pinu
-  analogHodnota = analogRead(analogPin);
+  // Světelný senzor TEMT6000
+  // vytvoření proměnných pro výsledky měření
+  float analogHodnota = analogRead(analogPin);
+  // přepočet analogové hodnoty z celého rozsahu
+  //  0-1023 na procentuální rozsah 0-100
+  int prepocet = map(analogHodnota, 0, 1023, 0, 100);
+  telegram.msg.b_2.b = (word)prepocet;
+
+  //nacitanie teploty
 
   // nacitaj stav tlacitok
   // nastavenie koncovych poloh garaze
@@ -498,13 +496,11 @@ void odoslat_data() {
 }
 
 void urobit_prepocty() {
-  // přepočet analogové hodnoty z celého rozsahu
-  //  0-1023 na procentuální rozsah 0-100
-  prepocet = map(analogHodnota, 0, 1023, 0, 100);
-  float f_val = analogHodnota / 1023 * 100;
-  telegram.msg.b_2.b = telegram.cnv_F_W(f_val);
+ // vyhodnotit osvit
+ int i_val = (int)telegram.msg.b_2.b;
+
   // zapnutie LED
-  if (f_val < 20.0) {
+  if (i_val < 20) {
     telegram.msg.b_8.v.b_00 = true;
   } else {
     telegram.msg.b_8.v.b_00 = false;
