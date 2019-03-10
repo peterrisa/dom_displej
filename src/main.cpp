@@ -54,7 +54,8 @@
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD.h> // Hardware-specific library
 #include <MCUFRIEND_kbv.h>
-
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include "app_config.h"
 #include <easy_code.h>
 
@@ -176,6 +177,23 @@ void Telegram::decodeTelegram() {
 }
 
 //--------------------------------------------------------------
+//nastavenia pre teplomery
+// vytvoření instance oneWireDS z knihovny OneWire
+OneWire  oneWireDS(PIN_DS);  // teplomery sú na pine 13
+// vytvoření instance senzoryDS z knihovny DallasTemperature
+DallasTemperature senzoryDS(&oneWireDS);
+int num_temp = 0; //pocet teplomerov pripojenych
+byte addr[MAX_DS1820_SENSORS][8];
+char buf[20];
+// koľko môže byť DS18S20 teplomerov pripojených
+
+// pole teplôt
+// teplota[0] = T1 - teplota kolektora
+// teplota[1] = T2 - teplota v bojleri
+// teplota[2] = T3 - teplota okolia
+float teplota[MAX_DS1820_SENSORS];
+//--------------------------------------------------------------
+//nastavenia pre displej
 char string[256];
 
 MCUFRIEND_kbv tft;
@@ -244,7 +262,7 @@ void kresli_blok_1() { // SVETLA
 // kresli jas
 void funk1() { // SVETLA
                // prekresli pozadie textu
-  tft.fillRect(45, 165, 160, 30, WHITE);
+  tft.fillRect(45, 165, 170, 30, WHITE);
   // nastav parametre textu
   tft.setCursor(45, 170);
   tft.setTextColor(GREY);
@@ -347,7 +365,8 @@ void kresli_blok_3() { // TEPLOTA IZBY
 }
 
 void funk3() { // TEPLOTA IZBY
-  //	tft.fillRect(200, 265, 90, 30, BLUE);
+  tft.fillRect(185, 265, 80, 50, WHITE);
+
   sprintf(string, "Aktualna  %s C", String((int)telegram.msg.b_1.b).c_str());
   tft.setCursor(10, 265);
   tft.setTextColor(BLACK);
@@ -364,10 +383,10 @@ void funk3() { // TEPLOTA IZBY
   /*tft.setCursor(330,270);
     tft.setTextColor(BLUE); tft.setTextSize(4);
     tft.println("Chladi");*/
-  tft.setCursor(350, 270);
+  tft.setCursor(292, 275);
   tft.setTextColor(RED);
-  tft.setTextSize(4);
-  tft.println("Kuri");
+  tft.setTextSize(3.5);
+  tft.println("Prihrieva");
 }
 
 void setup() {
@@ -376,7 +395,7 @@ void setup() {
   telegram.msg.stx = Telegram::STX;            // povinna konstanta
   telegram.msg.etx = Telegram::ETX;            // povinna konstanta
   telegram.msg.b_0.b = 10; // prednastaneva teplota
-  telegram.msg.b_1.b = 20; // aktualna teplota
+  telegram.msg.b_1.b = 0; // aktualna teplota
   telegram.msg.b_2.b = 0;  // detektor svetla
   // nastavenie koncovych poloh garaze
   telegram.msg.b_8.v.b_03 = false; // kontakt otvorene
@@ -412,6 +431,18 @@ void setup() {
   pinMode(RELE4_PIN_31, OUTPUT);
   pinMode(RELE5_PIN_33, OUTPUT);
 
+  // začni komunikovať s teplomermi
+  senzoryDS.begin();
+  for(int i=0; i < MAX_DS1820_SENSORS; i++) {
+     if (!oneWireDS.search(addr[i])) {
+         oneWireDS.reset_search();
+         delay(250);
+         break;
+     }
+     num_temp ++; // počet teplomerov zvýš o 1
+     delay(500);
+   }
+
   // zahájení komunikace po sériové lince
   // rychlostí 115200 baud
   Serial.begin(115200);
@@ -436,7 +467,15 @@ void nacitaj_data() {
   int prepocet = map(analogHodnota, 0, 1023, 0, 100);
   telegram.msg.b_2.b = (word)prepocet;
 
-  //nacitanie teploty
+    //TEPLOMER
+    // načíta všetky teplomery
+    senzoryDS.requestTemperatures();
+    // uloží teploty do poľa teplota
+    for (byte sensor = 0; sensor < num_temp; sensor++) {
+        teplota[sensor]=senzoryDS.getTempCByIndex(sensor);
+      }
+      //priradi aktualnu teplotu do telegramu
+    telegram.msg.b_1.b = teplota[0];
 
   // nacitaj stav tlacitok
   // nastavenie koncovych poloh garaze

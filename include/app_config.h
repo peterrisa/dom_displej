@@ -25,9 +25,9 @@
 #define LCD_WR A1  // LCD Write goes to Analog 1
 #define LCD_RD A0 // LCD Read goes to Analog 0
 
-//konstanty pre koncoveé spínače
-#define pinD 14
-//#define pinD 15
+//konstanty pre teplomery
+#define MAX_DS1820_SENSORS 5
+#define PIN_DS 14
 //--------------------------------------------------------------
 // Farby
 #define	BLACK    0x0000
