@@ -1,3 +1,6 @@
+#ifndef __EASY_CODE_HANDLER_H__
+#define __EASY_CODE_HANDLER_H__
+
 #include <Arduino.h>
 
 typedef union {
@@ -134,3 +137,5 @@ public:
     return num.w;
   };
 };
+
+#endif
