@@ -68,23 +68,23 @@ Telegram::Telegram() {
 }
 // prekonvertuje ascii string do bufferu
 void Telegram::setBuffer(char *str) {
-  strncpy((byte *)this.getBuffer(), str, Telegram::BUF_LEN);
+  strncpy((byte *)this->getBuffer(), str, Telegram::BUF_LEN);
 }
 // prekonvertuje ascii string do telegramu
 void Telegram::setTelegram(char *str) {
-  strncpy((byte *)this.getTelegram(), str, Telegram::MSG_LEN);
+  strncpy((byte *)this->getTelegram(), str, Telegram::MSG_LEN);
 }
 // nastavi Uint8 hodnotu v poli TELEGRAM
 void Telegram::setByteInTelegram(int num, byte val) {
   if ((num >= 0) && (num < Telegram::MSG_LEN)) {
-    byte *uint8 = (byte *)this.getTelegram();
+    byte *uint8 = (byte *)this->getTelegram();
     uint8[num] = val;
   }
 }
 // vrati Uint8 hodnotu v poli Telegram
 byte Telegram::getByteInTelegram(int num) {
   if ((num >= 0) && (num < Telegram::MSG_LEN)) {
-    byte *uint8 = (byte *)this.getTelegram();
+    byte *uint8 = (byte *)this->getTelegram();
     return uint8[num];
   }
   return 0;
@@ -92,14 +92,14 @@ byte Telegram::getByteInTelegram(int num) {
 // nastavi Uint8 hodnotu v poli buffer
 void Telegram::setByteInBuffer(int num, byte val) {
   if ((num >= 0) && (num < Telegram::BUF_LEN)) {
-    byte *uint8 = (byte *)this.getBuffer();
+    byte *uint8 = (byte *)this->getBuffer();
     uint8[num] = val;
   }
 }
 // vrati Uint8 hodnotu v poli Buffer
 byte Telegram::getByteInBuffer(int num) {
   if ((num >= 0) && (num < Telegram::BUF_LEN)) {
-    byte *uint8 = (byte *)this.getBuffer();
+    byte *uint8 = (byte *)this->getBuffer();
     return uint8[num];
   }
   return 0;
@@ -109,16 +109,16 @@ byte Telegram::getByteInBuffer(int num) {
 // prekontroluje ci je telegram validny
 // vrati true ak je validny, false ak nevalidny
 bool Telegram::isValidTelegram() {
-  if (this.msg.stx != Telegram::STX)
+  if (this->msg.stx != Telegram::STX)
     return false;
-  if (this.msg.etx != Telegram::ETX)
+  if (this->msg.etx != Telegram::ETX)
     return false;
   return true;
 }
 
-word Telegram::getUint16(num) {
+word Telegram::getUint16(int num) {
   if ((num < 10) && (num >= 0)) {
-    word *uint16 = (word *)this.getTelegram();
+    word *uint16 = (word *)this->getTelegram();
     uint16 += 2;
     return uint16[num];
   } else {
@@ -128,7 +128,7 @@ word Telegram::getUint16(num) {
 
 void Telegram::setUint16(int num, word val) {
   if ((num < 10) && (num >= 0)) {
-    word *uint16 = (word *)this.getTelegram();
+    word *uint16 = (word *)this->getTelegram();
     uint16 += 2;
     uint16[num] = val;
   }
@@ -139,11 +139,12 @@ void Telegram::setUint16(int num, word val) {
 // msg - struktura telegramu
 // len - velkost struktury telegramu v bajtoch; sizeof(TELEGRAM)
 void Telegram::encodeTelegram() {
-  byte *b_msg = (byte *)this.getTelegram();
-  byte *buf = (byte *)this.getBuffer();
+  byte *b_msg = (byte *)this->getTelegram();
+  byte *buf = (byte *)this->getBuffer();
   byte a, b, c;
+  int j = 0;
 
-  for (int i = 0, j = 0; i < Telegram::MSG_LEN; i++) {
+  for (int i = 0; i < Telegram::MSG_LEN; i++) {
     c = b_msg[i];
     a = c & 0x0F;
     b = (c >> 4) & 0x0F;
@@ -161,8 +162,8 @@ void Telegram::encodeTelegram() {
 // msg - struktura telegramu
 // len - velkost struktury telegramu v bajtoch; int len = sizeof(TELEGRAM);
 void Telegram::decodeTelegram() {
-  byte *b_msg = (byte *)this.getTelegram();
-  byte *buf = (byte *)this.getBuffer();
+  byte *b_msg = (byte *)this->getTelegram();
+  byte *buf = (byte *)this->getBuffer();
   byte a, b, c;
 
   for (int i = 0, j = 0; i < Telegram::MSG_LEN; i++) {
@@ -249,7 +250,7 @@ void funk1() { // SVETLA
   tft.setTextColor(GREY);
   tft.setTextSize(3);
   // zobraz text s hodnotou osvitu
-  float f_val = telegram.cnv_W_F(telegram.msg.b_02.b);
+  float f_val = telegram.cnv_W_F(telegram.msg.b_2.b);
 
   sprintf(string, "Jas %s", String(f_val).c_str());
   tft.println(string);
@@ -513,7 +514,7 @@ void urobit_prepocty() {
 void loop() {
   // zapametaj predosly stav periferii
   TELEGRAM last_msg;
-  memcpy(&last_msg, &msg, sizeof(msg));
+  memcpy(&last_msg, &telegram.msg, sizeof(telegram.msg));
 
   // nacita data z periferii do struktury data
   nacitaj_data();
@@ -526,25 +527,25 @@ void loop() {
   //-----------------------------------------------
 
   // vyhodnotenie jasu
-  if (last_msg.msg.b_2.b != telegram.msg.b_2.b) {
+  if (last_msg.b_2.b != telegram.msg.b_2.b) {
     funk1();
   }
   // vyhodnotenie garazovych dveri
-  if ((last_msg.msg.b_8.v.b_03 != telegram.msg.b_8.v.b_03) ||
-      (last_msg.msg.b_8.v.b_04 != telegram.msg.b_8.v.b_04)) {
+  if ((last_msg.b_8.v.b_03 != telegram.msg.b_8.v.b_03) ||
+      (last_msg.b_8.v.b_04 != telegram.msg.b_8.v.b_04)) {
     funk2();
   }
   // vyhodnotenie teploty v izbe
-  if ((last_msg.msg.b_0.b != telegram.msg.b_0.b) ||
-      (last_msg.msg.b_1.b != telegram.msg.b_1.b)) {
+  if ((last_msg.b_0.b != telegram.msg.b_0.b) ||
+      (last_msg.b_1.b != telegram.msg.b_1.b)) {
     funk3();
   }
 
   // odoslat data do periferii
   odoslat_data();
   // odoslat data do servera
-  encodeTelegram(buffer, &msg, sizeof(msg));
-  Serial.println(buffer);
+  telegram.encodeTelegram();
+  Serial.println((char*)telegram.getBuffer());
 
   // pauza
   delay(1000);

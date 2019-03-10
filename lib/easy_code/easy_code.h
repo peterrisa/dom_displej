@@ -48,10 +48,6 @@ typedef struct {
 } TELEGRAM;
 
 class Telegram {
-private:
-  TELEGRAM msg;
-  byte buffer[Telegram::BUF_LEN];
-
 public:
   static const byte MSG_LEN = sizeof(TELEGRAM);
   static const byte BUF_LEN = MSG_LEN * 2 + 1;
@@ -65,16 +61,19 @@ public:
   static const byte START = 0;
   // offset of last byte in telegram
   static const byte STOP = MSG_LEN - 1;
-
+//datove objekty
+  TELEGRAM msg;
+  byte buffer[Telegram::BUF_LEN];
+//metody
   Telegram();
   // urobi vzpis pola telegram
   void logTelegram(){};
   // urobi vzpis pola Buffer
   void logBuffer(){};
   // vrati pole telegram
-  byte *getTelegram() { return (byte *)&this.msg; };
+  byte *getTelegram() { return (byte *)&this->msg; };
   // vrati pole Buffer
-  byte *getBuffer() { return this.buffer; };
+  byte *getBuffer() { return this->buffer; };
   // prekonvertuje string typu ASCII do pola Buffer
   void setBuffer(char *str);
   // prekonvertuje string typu ASCII do pola Telegram
@@ -89,7 +88,7 @@ public:
   byte getByteInBuffer(int num);
   // vrati Uint16 hodnotu z payload pola
   // num index v poli
-  word getUint16(int);
+  word getUint16(int num);
   // nastavi Uint16 hodnotu z payload pola
   // num index v poli
   void setUint16(int num, word val);

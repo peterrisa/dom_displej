@@ -27,7 +27,7 @@
 
 //konstanty pre koncoveé spínače
 #define pinD 14
-#define pinD 15
+//#define pinD 15
 //--------------------------------------------------------------
 // Farby
 #define	BLACK    0x0000
