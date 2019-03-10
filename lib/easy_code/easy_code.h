@@ -72,9 +72,9 @@ public:
   // urobi vzpis pola Buffer
   void logBuffer(){};
   // vrati pole telegram
-  byte *getTelegram() { return (byte *)&this->msg; };
+  byte *getTelegram() { return (byte *)&this.msg; };
   // vrati pole Buffer
-  byte *getBuffer() { return this->buffer; };
+  byte *getBuffer() { return this.buffer; };
   // prekonvertuje string typu ASCII do pola Buffer
   void setBuffer(char *str);
   // prekonvertuje string typu ASCII do pola Telegram
@@ -100,6 +100,43 @@ public:
   void encodeTelegram();
   // prekonvertuje char retazec ukonceny '\x00' na telegram
   void decodeTelegram();
+  // prekonvertuje cislo word do float
+  union Cislo {
+    byte sig : 1;  // znamienko
+    byte cele : 8; // cela cast cisla
+    byte des : 7;  // desatinna cast cisla
+    word w;
+  };
+
+  float cnv_W_F(const word w_val) {
+    union Cislo num;
+    float f_val;
+    num.w = w_val;
+    f_val = 0.0 + num.des;
+    f_val /= 1000.0;
+    f_val += num.cele;
+
+    if (num.sig)
+      f_val *= -1;
+    return f_val;
+  };
+
+  // prekonvertuje cislo float do word
+  //			-32768 32767
+  word cnv_F_W(const float f_val) {
+    union Cislo num;
+    float f = round(f_val * 1000) / 1000.0;
+    int i = f;
+    if (i < 0) {
+      num.sig = 1;
+    } else {
+      num.sig = 0;
+    }
+    f = (f - i) * 1000;
+    i = f;
+    num.des = i;
+    return num.w;
+  };
 };
 
 #endif
