@@ -61,10 +61,10 @@ public:
   static const byte START = 0;
   // offset of last byte in telegram
   static const byte STOP = MSG_LEN - 1;
-//datove objekty
+  // datove objekty
   TELEGRAM msg;
   byte buffer[Telegram::BUF_LEN];
-//metody
+  // metody
   Telegram();
   // urobi vzpis pola telegram
   void logTelegram(){};
