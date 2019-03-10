@@ -28,8 +28,6 @@
 //--------------------------------------------------------------
 
 
-
-
 //Knižnice
 #include <MCUFRIEND_kbv.h>
 #include <Adafruit_GFX.h>    // Core graphics library

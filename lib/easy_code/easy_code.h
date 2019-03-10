@@ -1,6 +1,7 @@
 #ifndef __EASY_CODE_HANDLER_H__
 #define __EASY_CODE_HANDLER_H__
 
+
 typedef union {
 	struct {
 		word b_00: 1;
