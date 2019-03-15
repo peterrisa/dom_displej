@@ -37,10 +37,10 @@
 //  B_VALUE b_1; // 2 bytes -- skutocna teplota
 //  B_VALUE b_2; // 2 bytes -- aktualny osvit
 //  B_VALUE b_3; // 2 bytes
-//  B_VALUE b_4; // 2 bytes
-//  B_VALUE b_5; // 2 bytes
-//  B_VALUE b_6; // 2 bytes
-//  B_VALUE b_7; // 2 bytes
+//  B_VALUE b_4; // 2 bytes -- DEBUG tx prikazy
+//  B_VALUE b_5; // 2 bytes -- DEBUG tx setpoint
+//  B_VALUE b_6; // 2 bytes -- DEBUG tx setpoint teplota
+//  B_VALUE b_7; // 2 bytes -- DEBUG
 //  B_VALUE b_8; // 2 bytes -- feedbacky
 //  B_VALUE b_9; // 2 bytes -- prikazy
 //-------------------------------
@@ -417,8 +417,8 @@ void setup() {
   // LED
   telegram.msg.b_8.v.b_00 = false; // zapnutie svetla
   // commandy
-  telekom.msg.b_6.b = 30; // ziadne prikazy z nadradeneho servera
-  telekom.msg.b_9.b = 0;  // ziadne prikazy z nadradeneho servera
+  telegram.msg.b_6.b = 30; // ziadne prikazy z nadradeneho servera
+  telegram.msg.b_9.b = 0;  // ziadne prikazy z nadradeneho servera
 
   // nastvanie vstupov
   pinMode(INPUT_PIN_16, INPUT);
@@ -459,8 +459,8 @@ void setup() {
   kresli_blok_3();
   funk3();
 }
-
-void nacitat_data() {
+// nacitat vstupy Arduina
+void read_inputs() {
   // načtení hodnoty z analogového pinu
   // Světelný senzor TEMT6000
   // vytvoření proměnných pro výsledky měření
@@ -494,7 +494,7 @@ void nacitat_data() {
   }
 }
 
-void odoslat_data() {
+void write_outputs() {
   if (telegram.msg.b_8.v.b_00) {
     digitalWrite(LED_18, HIGH); // LED zapnute
   } else {
@@ -555,12 +555,10 @@ void urobit_prepocty() {
     // tu bude logika pre riadenie motorov
   }
 }
+// nacitat data zo serveru
+void read_server() {
+  Telegram new_msg;
 
-void loop() {
-  // zapametaj predosly stav periferii
-  TELEGRAM last_msg, new_msg;
-  memcpy(&last_msg, &telegram.msg, sizeof(telegram.msg));
-  // nacitaj data zo serioveho portu
   if (Serial.available() >= Telegram::BUF_LEN) {
     for (int i = 0; i < Telegram::BUF_LEN; i++) {
       byte c = Serial.read();
@@ -569,19 +567,38 @@ void loop() {
     while (Serial.available()) {
       byte c = Serial.read();
     }
+    //    Serial.println((char *)new_msg.getBuffer());
     new_msg.decodeTelegram();
+
     if (new_msg.isValidTelegram()) {
+      //  Serial.println("arduino rx is valid\n");
       // prekopiruj cmd - prikazy zo servera pre Arduino
       telegram.msg.b_9.b = new_msg.msg.b_9.b;
       telegram.msg.b_6.b = new_msg.msg.b_6.b;
+
+      // DEBUG
+      telegram.msg.b_4.b = new_msg.msg.b_9.b;
+      telegram.msg.b_5.b = new_msg.msg.b_8.b;
+      telegram.msg.b_7.b = new_msg.msg.b_6.b;
     }
   }
-  // nacita data zo vstupov Arduina
-  nacitat_data();
+}
+// zapisat data na server
+void write_server() {
+  telegram.encodeTelegram();
+  Serial.println((char *)telegram.getBuffer());
+}
 
+void loop() {
+  // zapametaj predosly stav periferii
+  TELEGRAM last_msg;
+  memcpy(&last_msg, &telegram.msg, sizeof(telegram.msg));
+  // nacitaj data zo serioveho portu
+  read_server();
+  // nacita data zo vstupov Arduina
+  read_inputs();
   // vyhodnot data, urob prepocty
   urobit_prepocty();
-
   //-----------------------------------------------
   // zobrazit data na displej
   //-----------------------------------------------
@@ -600,13 +617,10 @@ void loop() {
       (last_msg.b_1.b != telegram.msg.b_1.b)) {
     funk3();
   }
-
   // odoslat data do periferii
-  odoslat_data();
-  // odoslat data do servera
-  telegram.encodeTelegram();
-  Serial.println((char *)telegram.getBuffer());
-
+  write_outputs();
+  // odoslat data do serveru
+  write_server();
   // pauza
   delay(1000);
 }
