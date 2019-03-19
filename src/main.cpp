@@ -179,7 +179,7 @@ void Telegram::decodeTelegram() {
 //--------------------------------------------------------------
 // nastavenia pre teplomery
 // vytvoření instance oneWireDS z knihovny OneWire
-OneWire oneWireDS(PIN_DS); // teplomery sú na pine 13
+OneWire oneWireDS(INPUT_PIN_14); // teplomery sú na pine 14
 // vytvoření instance senzoryDS z knihovny DallasTemperature
 DallasTemperature senzoryDS(&oneWireDS);
 int num_temp = 0; // pocet teplomerov pripojenych
@@ -188,9 +188,7 @@ char buf[20];
 // koľko môže byť DS18S20 teplomerov pripojených
 
 // pole teplôt
-// teplota[0] = T1 - teplota kolektora
-// teplota[1] = T2 - teplota v bojleri
-// teplota[2] = T3 - teplota okolia
+// teplota[0] = T1 - teplota okolia
 float teplota[MAX_DS1820_SENSORS];
 //--------------------------------------------------------------
 // nastavenia pre displej
@@ -390,7 +388,6 @@ void funk3() { // TEPLOTA IZBY
 }
 
 void setup() {
-
   // nastavenie datovej struktury
   telegram.msg.stx = Telegram::STX; // povinna konstanta
   telegram.msg.etx = Telegram::ETX; // povinna konstanta
@@ -419,12 +416,10 @@ void setup() {
   // commandy
   telegram.msg.b_6.b = 30; // ziadne prikazy z nadradeneho servera
   telegram.msg.b_9.b = 0;  // ziadne prikazy z nadradeneho servera
-
   // nastvanie vstupov
+  pinMode(INPUT_PIN_15, INPUT);
   pinMode(INPUT_PIN_16, INPUT);
-  pinMode(INPUT_PIN_17, INPUT);
   // nastavenie LED
-
   pinMode(LED_18, OUTPUT);
   // nastavenie vystupov , relatok
   pinMode(RELE0_PIN_23, OUTPUT);
@@ -433,7 +428,6 @@ void setup() {
   pinMode(RELE3_PIN_29, OUTPUT);
   pinMode(RELE4_PIN_31, OUTPUT);
   pinMode(RELE5_PIN_33, OUTPUT);
-
   // začni komunikovať s teplomermi
   senzoryDS.begin();
   for (int i = 0; i < MAX_DS1820_SENSORS; i++) {
@@ -460,7 +454,7 @@ void setup() {
   funk3();
 }
 // nacitat vstupy Arduina
-void read_inputs() {
+void readInputs() {
   // načtení hodnoty z analogového pinu
   // Světelný senzor TEMT6000
   // vytvoření proměnných pro výsledky měření
@@ -482,19 +476,19 @@ void read_inputs() {
 
   // nacitaj stav tlacitok
   // nastavenie koncovych poloh garaze
-  if (digitalRead(INPUT_PIN_16) == HIGH) {
+  if (digitalRead(INPUT_PIN_15) == HIGH) {
     telegram.msg.b_8.v.b_03 = true; // kontakt otvorene true
   } else {
     telegram.msg.b_8.v.b_03 = false; // kontakt otvorene false
   }
-  if (digitalRead(INPUT_PIN_17) == HIGH) {
+  if (digitalRead(INPUT_PIN_16) == HIGH) {
     telegram.msg.b_8.v.b_04 = true; // kontakt zatvorene true
   } else {
     telegram.msg.b_8.v.b_04 = false; // kontakt zatvorene false
   }
 }
 
-void write_outputs() {
+void writeOutputs() {
   if (telegram.msg.b_8.v.b_00) {
     digitalWrite(LED_18, HIGH); // LED zapnute
   } else {
@@ -537,7 +531,7 @@ void write_outputs() {
   }
 }
 
-void urobit_prepocty() {
+void urobitPrepocty() {
   // vyhodnotit osvit
   int i_val = (int)telegram.msg.b_2.b;
 
@@ -556,7 +550,7 @@ void urobit_prepocty() {
   }
 }
 // nacitat data zo serveru
-void read_server() {
+void readFromServer() {
   Telegram new_msg;
 
   if (Serial.available() >= Telegram::BUF_LEN) {
@@ -584,7 +578,7 @@ void read_server() {
   }
 }
 // zapisat data na server
-void write_server() {
+void writeToServer() {
   telegram.encodeTelegram();
   Serial.println((char *)telegram.getBuffer());
 }
@@ -594,11 +588,11 @@ void loop() {
   TELEGRAM last_msg;
   memcpy(&last_msg, &telegram.msg, sizeof(telegram.msg));
   // nacitaj data zo serioveho portu
-  read_server();
+  readFromServer();
   // nacita data zo vstupov Arduina
-  read_inputs();
+  readInputs();
   // vyhodnot data, urob prepocty
-  urobit_prepocty();
+  urobitPrepocty();
   //-----------------------------------------------
   // zobrazit data na displej
   //-----------------------------------------------
@@ -618,9 +612,9 @@ void loop() {
     funk3();
   }
   // odoslat data do periferii
-  write_outputs();
+  writeOutputs();
   // odoslat data do serveru
-  write_server();
+  writeToServer();
   // pauza
   delay(1000);
 }

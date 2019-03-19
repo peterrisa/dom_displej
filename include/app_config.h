@@ -5,10 +5,13 @@
 #define analogPin A6
 // nastavenie led
 #define LED_18 18
-// kontakty pre vstupy
-#define INPUT_PIN_16 16
-#define INPUT_PIN_17 17
 
+// konstanty pre teplomery
+#define MAX_DS1820_SENSORS 5
+#define INPUT_PIN_14 14
+// kontakty pre vstupy
+#define INPUT_PIN_15 15
+#define INPUT_PIN_16 16
 // konstanty pre relatka
 #define RELE0_PIN_23 23
 #define RELE1_PIN_25 25
@@ -16,18 +19,12 @@
 #define RELE3_PIN_29 29
 #define RELE4_PIN_31 31
 #define RELE5_PIN_33 33
-
 // konstanty pre displej
-
 #define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
 #define LCD_CS A3    // Chip Select goes to Analog 3
 #define LCD_CD A2    // Command/Data goes to Analog 2
 #define LCD_WR A1    // LCD Write goes to Analog 1
 #define LCD_RD A0    // LCD Read goes to Analog 0
-
-// konstanty pre teplomery
-#define MAX_DS1820_SENSORS 5
-#define PIN_DS 14
 //--------------------------------------------------------------
 // Farby
 #define BLACK 0x0000
