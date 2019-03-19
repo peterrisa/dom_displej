@@ -271,6 +271,7 @@ void funk1() { // SVETLA
 }
 
 //------------------------------------------------------------------
+// nakresli obdlznik s grafikou garaze
 void kresli_blok_2() { // GARAZ
 
   // vykreslenie oblého štvorca
