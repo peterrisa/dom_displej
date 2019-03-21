@@ -59,6 +59,9 @@
 #include <OneWire.h>
 #include <easy_code.h>
 
+// funkcia pre nacitanie stavu vystupov
+int digitalReadOutputPin(uint8_t pin);
+
 Telegram telegram;
 
 //--------------------------------------------------------------
@@ -267,7 +270,7 @@ void prekresliBlok1() { // SVETLA
   tft.setTextColor(GREY);
   tft.setTextSize(3);
   // zobraz text s hodnotou osvitu
-  sprintf(string, "Jas %s", String((int)telegram.msg.w[2]).c_str());
+  sprintf(string, "Jas %s", String((int)telegram.msg.w[ATB]).c_str());
   tft.println(string);
 }
 //--------------------------------------------------------------
@@ -298,7 +301,7 @@ void prekresliBlok2() { // GARAZ
   tft.println("Otvorena");*/
 
   // Garaz otvorena obrazok + text
-  if (!BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_GAR_ON)) {
+  if (!BITMASK_CHECK_ALL(telegram.msg.w[FDB], FBK_GAR_ON)) {
     tft.setCursor(290, 55);
     tft.setTextColor(GREEN);
     tft.setTextSize(3);
@@ -315,7 +318,7 @@ void prekresliBlok2() { // GARAZ
             tft.fillRect(279, 131, 155, 16, WHITE);*/
   }
   // Garaz zatvorena text + obrazok
-  if (!BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_GAR_OFF)) {
+  if (!BITMASK_CHECK_ALL(telegram.msg.w[FDB], FBK_GAR_OFF)) {
     tft.setCursor(280, 55);
     tft.setTextColor(RED);
     tft.setTextSize(3);
@@ -335,8 +338,8 @@ void prekresliBlok2() { // GARAZ
     tft.fillRect(279, 131, 155, 16, WHITE);*/
   }
   // Garaz pracuje
-  if (!BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_GAR_ON) ||
-      !BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_GAR_OFF)) {
+  if (!BITMASK_CHECK_ALL(telegram.msg.w[FDB], FBK_GAR_ON) ||
+      !BITMASK_CHECK_ALL(telegram.msg.w[FDB], FBK_GAR_OFF)) {
     tft.fillRect(279, 110, 1, 1, WHITE);
   } else {
     tft.setCursor(290, 55);
@@ -367,14 +370,14 @@ void kresli_blok_3() { // TEPLOTA IZBY
 void prekresliBlok3() { // TEPLOTA IZBY
   tft.fillRect(185, 265, 80, 50, WHITE);
 
-  sprintf(string, "Aktualna  %s C", String((int)telegram.msg.w[1]).c_str());
+  sprintf(string, "Aktualna  %s C", String((int)telegram.msg.w[ATM]).c_str());
   tft.setCursor(10, 265);
   tft.setTextColor(BLACK);
   tft.setTextSize(3);
   tft.println(string);
 
   //	tft.fillRect(200, 292, 90, 30, BLUE);
-  sprintf(string, "Nastavena %s C", String((int)telegram.msg.w[0]).c_str());
+  sprintf(string, "Nastavena %s C", String((int)telegram.msg.w[STM]).c_str());
   tft.setCursor(10, 292);
   tft.setTextColor(MAGENTA);
   tft.setTextSize(3);
@@ -401,7 +404,7 @@ void readInputs() {
   //  0-1023 na procentuální rozsah 0-100
   int prepocet = map(analogHodnota, 0, 1023, 0, 100);
   // zapamataj vypocitany osvit
-  telegram.msg.w[2] = (word)prepocet;
+  telegram.msg.w[ATB] = (word)prepocet;
   //************************************************************
   // TEPLOMER
   // načíta všetky teplomery
@@ -411,19 +414,19 @@ void readInputs() {
     teplota[sensor] = senzoryDS.getTempCByIndex(sensor);
   }
   // zapamataj aktualnu teplotu
-  telegram.msg.w[1] = teplota[0];
+  telegram.msg.w[ATM] = teplota[0];
   //************************************************************
   // nacitaj stav tlacitok
   // nastavenie koncovych poloh garaze
-  if (digitalRead(INPUT_PIN_15) == HIGH) {      // kontakt otvorena garaz
-    BITMASK_SET(telegram.msg.w[8], FBK_GAR_ON); // kontakt otvorene true
+  if (digitalRead(INPUT_PIN_15) == HIGH) {        // kontakt otvorena garaz
+    BITMASK_SET(telegram.msg.w[FDB], FBK_GAR_ON); // kontakt otvorene true
   } else {
-    BITMASK_CLEAR(telegram.msg.w[8], FBK_GAR_ON); // kontakt otvorene false
+    BITMASK_CLEAR(telegram.msg.w[FDB], FBK_GAR_ON); // kontakt otvorene false
   }
-  if (digitalRead(INPUT_PIN_16) == HIGH) {       // kontakt zatvorena garaz
-    BITMASK_SET(telegram.msg.w[8], FBK_GAR_OFF); // kontakt zatvorene true
+  if (digitalRead(INPUT_PIN_16) == HIGH) {         // kontakt zatvorena garaz
+    BITMASK_SET(telegram.msg.w[FDB], FBK_GAR_OFF); // kontakt zatvorene true
   } else {
-    BITMASK_CLEAR(telegram.msg.w[8], FBK_GAR_OFF); // kontakt zatvorene false
+    BITMASK_CLEAR(telegram.msg.w[FDB], FBK_GAR_OFF); // kontakt zatvorene false
   }
 }
 //--------------------------------------------------------------
@@ -431,102 +434,138 @@ void readInputs() {
 //--------------------------------------------------------------
 void writeOutputs() {
   // nastavenie vystupov , relatok
-  // rezerva
-  if (!BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_RELE_0)) {
-    digitalWrite(RELE0, HIGH); // relé0 rozopnute
-  } else {
-    digitalWrite(RELE0, LOW); // relé0 zapnute
+  //************************************************************
+  // vyhodnotenie pohybu garaze
+  // zisti ktorym smerom sa garaz hybe
+  int rele0 = digitalReadOutputPin(RELE0);
+  int rele1 = digitalReadOutputPin(RELE1);
+  // ak sa ma garaz zastavit zapnut
+  if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_STOP)) {
+    digitalWrite(RELE0, LOW); // relé 0 vypnute
+    delay(200);
+    digitalWrite(RELE1, LOW); // relé 1 vypnute
   }
-  // rezerva
-  if (!BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_RELE_1)) {
-    digitalWrite(RELE1, HIGH); // relé1 rozopnute
-  } else {
-    digitalWrite(RELE1, LOW); // relé1 zapnute
+  // ak ma garaz zatvorit
+  if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_OFF)) {
+    // ak je garaz v pohybe nespravnym smerom
+    if (rele1 == LOW) {
+      // potom pohyb zastavi
+      digitalWrite(RELE0, LOW); // relé 0 vypnute
+      delay(200);
+      digitalWrite(RELE1, LOW); // relé 1 vypnute
+    } else {
+      digitalWrite(RELE1, HIGH); // relé 1 zapnut
+      delay(200);
+      digitalWrite(RELE0, HIGH); // relé 0 zapnut
+    }
+  }
+  // ak ma garaz otvorit
+  if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_ON)) {
+    // ak je garaz v pohybe nespravnym smerom
+    if (rele1 == HIGH) {
+      // potom pohyb zastavi
+      digitalWrite(RELE0, LOW); // relé 0 vypnute
+      delay(200);
+      digitalWrite(RELE1, LOW); // relé 1 vypnute
+    } else {
+      digitalWrite(RELE1, LOW); // relé 1 vypnute
+      delay(200);
+      digitalWrite(RELE0, HIGH); // relé 0 zapnut
+    }
   }
   //************************************************************
   // zapnutie svetiel
-  // 12V rezerva
-  if (!BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_RELE_2)) {
-    digitalWrite(RELE2, HIGH); // relé2 rozopnute
-  } else {
-    digitalWrite(RELE2, LOW); // relé2 zapnute
-  }
   // 12V zapnutie LED svetiel
-  if (!BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_RELE_3)) {
-    digitalWrite(RELE3, HIGH); // relé3 rozopnute
-  } else {
-    digitalWrite(RELE3, LOW); // relé3 zapnute
+  // ak sa ma svetlo zapnut
+  if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_LIT_ON)) {
+    digitalWrite(RELE2, HIGH); // relé 2 zapnut
   }
-  // 12V nastavenie smeru pohybu motora garaze
-  if (!BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_RELE_4)) {
-    digitalWrite(RELE4, HIGH); // relé4 rozopnute
-  } else {
-    digitalWrite(RELE4, LOW); // relé4 zapnute
+  // ak sa ma svetlo vypnut
+  if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_LIT_OFF)) {
+    digitalWrite(RELE2, LOW); // relé 2 vypnut
   }
-  // 5V zapnutie motora garaze
-  if (!BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_RELE_5)) {
-    digitalWrite(RELE5, HIGH); // relé5 rozopnute
-  } else {
-    digitalWrite(RELE5, LOW); // relé5 zapnute
+  // ak sa ma svetlo zapnut automaticky
+  if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_LIT_AUT)) {
+    // vyhodnotit osvit
+    int i_val = (int)telegram.msg.w[ATB];
+    if (i_val < 20) {
+      digitalWrite(RELE2, HIGH); // relé 2 zapnut
+    } else {
+      digitalWrite(RELE2, LOW); // relé 2 vypnut}
+    }
   }
 }
 //--------------------------------------------------------------
 // vyhodnot prikazy a vykonaj vypocty
 //--------------------------------------------------------------
 void urobitPrepocty() {
-  word cmd_maska = 0, sta_maska = 0;
   // ak sa nieco ma zmenit so svetlom
   // vyhodnotit prikazy zo servera
-  cmd_maska = CMD_LIT_ON | CMD_LIT_OFF | CMD_LIT_AUT;
-  sta_maska = STA_LIT_ON | STA_LIT_OFF | STA_LIT_AUT;
-  /*
-    switch (telegram.msg.b_9.b & cmd_maska) {
-    case CMD_LIT_ON:
-      telegram.msg.b_7.b &= ~sta_maska;
-      telegram.msg.b_7.b |= STA_LIT_ON;
-      break;
-    case CMD_LIT_AUT:
-      telegram.msg.b_7.b &= ~sta_maska;
-      telegram.msg.b_7.b |= STA_LIT_AUT;
-      break;
-    case CMD_LIT_OFF:
-      telegram.msg.b_7.b &= ~sta_maska;
-      telegram.msg.b_7.b |= STA_LIT_OFF;
-      break;
-    }
-    */
   //*******************************************
-  //**priprava vystupov pre relatka
-  // vyhodnotit osvit
-  int i_val = (int)telegram.msg.w[2];
-  // zapnutie LED
-  /*
-    sta_maska = STA_LIT_ON | STA_LIT_OFF | STA_LIT_AUT;
-    switch (telegram.msg.b_7.b & sta_maska) {
-    case STA_LIT_ON: // ak chcem svetlo zapnut
-      telegram.msg.b_8.v.b_13 = true;
-      break;
-    case STA_LIT_AUT: // ak chcem svetlo automaticke
-      // ak je osvit menej ako setpoint osvitu
-      if (i_val < 20) {
-        telegram.msg.b_8.v.b_13 = true;
-      } else {
-        telegram.msg.b_8.v.b_13 = false;
-      }
-      break;
-    case STA_LIT_OFF: // ak chcem svetlo vypnut
-      telegram.msg.b_8.v.b_13 = false;
-      break;
-    }
+  // vyhodnotenie svetla
+  word CMD_MASK = CMD_LIT_ON | CMD_LIT_OFF | CMD_LIT_AUT;
+  word STA_MASK = STA_LIT_ON | STA_LIT_OFF | STA_LIT_AUT;
+  // ak je niektory priznak z povelu pre svetlo aktivny
 
-    // prikazy z nadradeneho systemu
-    if (telegram.msg.w[6]) {
-      telegram.msg.w[0] = telegram.msg.w[6];
+  // ak sa ma svetlo zapnut
+  if (BITMASK_CHECK_ALL(telegram.msg.w[CMD], CMD_LIT_ON)) {
+    BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
+    BITMASK_SET(telegram.msg.w[STA], STA_LIT_ON);
+  }
+  // ak sa ma svetlo vypnut
+  if (BITMASK_CHECK_ALL(telegram.msg.w[CMD], CMD_LIT_OFF)) {
+    BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
+    BITMASK_SET(telegram.msg.w[STA], STA_LIT_OFF);
+  }
+  // ak sa ma svetlo zapnut automaticky
+  if (BITMASK_CHECK_ALL(telegram.msg.w[CMD], CMD_LIT_AUT)) {
+    BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
+    BITMASK_SET(telegram.msg.w[STA], STA_LIT_AUT);
+  }
+  //*******************************************
+  // vyhodnotenie garaze
+  CMD_MASK = CMD_GAR_ON | CMD_GAR_OFF;
+  STA_MASK = STA_GAR_ON | STA_GAR_OFF | STA_GAR_STOP;
+  // ak chcem aby sa garaz otvorila
+  if (BITMASK_CHECK_ALL(telegram.msg.w[CMD], CMD_GAR_ON)) {
+    // ak sa garaz uz hybe k otvoreniu
+    if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_ON)) {
+      // potom sa pohyb zastavi
+      BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
+      BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
+    } else {
+      // nech sa zacne hybat k otvoreniu
+      BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
+      BITMASK_SET(telegram.msg.w[STA], STA_GAR_ON);
     }
-    if (telegram.msg.b_9.b) {
-      // tu bude logika pre riadenie motorov
+  }
+  // ak chcem aby sa garaz zatvorila
+  if (BITMASK_CHECK_ALL(telegram.msg.w[CMD], CMD_GAR_OFF)) {
+    // ak sa garaz uz hybe k otvoreniu
+    if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_OFF)) {
+      // potom sa pohyb zastavi
+      BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
+      BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
+    } else {
+      // nech sa zacne hybat k otvoreniu
+      BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
+      BITMASK_SET(telegram.msg.w[STA], STA_GAR_OFF);
     }
-    */
+  }
+  // zistit ci bol dosiahnuty limit pre otvorenie
+  if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_ON) &&
+      BITMASK_CHECK_ALL(telegram.msg.w[FDB], FBK_GAR_ON)) {
+    // potom sa pohyb zastavi
+    BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
+    BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
+  }
+  // zistit ci bol dosiahnuty limit pre zatvorenie
+  if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_OFF) &&
+      BITMASK_CHECK_ALL(telegram.msg.w[FDB], FBK_GAR_OFF)) {
+    // potom sa pohyb zastavi
+    BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
+    BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
+  }
 }
 //--------------------------------------------------------------
 // nacitaj data zo serveru
@@ -549,9 +588,10 @@ void readFromServer() {
     if (new_msg.isValidTelegram()) {
       //  Serial.println("arduino rx is valid\n");
       // prekopiruj cmd - prikazy zo servera pre Arduino
-      telegram.msg.w[9] = new_msg.msg.w[9];
+      telegram.msg.w[CMD] = new_msg.msg.w[CMD];
       // prekopiruj hodnotu setpointu
-      telegram.msg.w[6] = new_msg.msg.w[6];
+      // telegram.msg.w[STM] = new_msg.msg.w[STM];
+      telegram.msg.w[STM] = new_msg.msg.w[STM];
     }
   }
 }
@@ -565,13 +605,25 @@ void writeToServer() {
   Serial.println((char *)telegram.getBuffer());
 }
 //--------------------------------------------------------------
+// nacitaj aktualny stav vystupu
+//--------------------------------------------------------------
+int digitalReadOutputPin(uint8_t pin) {
+  uint8_t bit = digitalPinToBitMask(pin);
+  uint8_t port = digitalPinToPort(pin);
+  if (port == NOT_A_PIN)
+    return LOW;
+
+  return (*portOutputRegister(port) & bit) ? HIGH : LOW;
+}
+//--------------------------------------------------------------
 // nastavenie Arduina
 //--------------------------------------------------------------
 void setup() {
   //************************************************************
   // commandy
-  telegram.msg.w[6] = 25; // ziadne prikazy z nadradeneho servera
-  telegram.msg.w[9] = 0;  // ziadne prikazy z nadradeneho servera
+  // telegram.msg.w[STM] = 25; // ziadne prikazy z nadradeneho servera
+  telegram.msg.w[STM] = 25; // ziadne prikazy z nadradeneho servera
+  telegram.msg.w[CMD] = 0;  // ziadne prikazy z nadradeneho servera
   //************************************************************
   // nastavenie vstupov
   pinMode(INPUT_PIN_15, INPUT); // kontakt otvorena garaz
@@ -631,19 +683,19 @@ void loop() {
   //************************************************************
   // zobrazit data na displej
   // vyhodnotenie jasu
-  if (last_msg.w[2] != telegram.msg.w[2]) {
+  if (last_msg.w[ATB] != telegram.msg.w[ATB]) {
     prekresliBlok1();
   }
   // vyhodnotenie garazovych dveri
-  if ((BITMASK_CHECK_ALL(last_msg.w[8], FBK_GAR_ON) !=
-       BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_GAR_ON)) ||
-      (BITMASK_CHECK_ALL(last_msg.w[8], FBK_GAR_ON) !=
-       BITMASK_CHECK_ALL(telegram.msg.w[8], FBK_GAR_ON))) {
+  if ((BITMASK_CHECK_ALL(last_msg.w[FDB], FBK_GAR_ON) !=
+       BITMASK_CHECK_ALL(telegram.msg.w[FDB], FBK_GAR_ON)) ||
+      (BITMASK_CHECK_ALL(last_msg.w[FDB], FBK_GAR_ON) !=
+       BITMASK_CHECK_ALL(telegram.msg.w[FDB], FBK_GAR_ON))) {
     prekresliBlok2();
   }
   // vyhodnotenie teploty v izbe
-  if ((last_msg.w[0] != telegram.msg.w[0]) ||
-      (last_msg.w[1] != telegram.msg.w[1])) {
+  if ((last_msg.w[STM] != telegram.msg.w[STM]) ||
+      (last_msg.w[ATM] != telegram.msg.w[ATM])) {
     prekresliBlok3();
   }
   //************************************************************
@@ -653,7 +705,7 @@ void loop() {
   // odoslat data do serveru
   writeToServer();
   //************************************************************
-  telegram.msg.w[0] = 0; // ziadne prikazy z nadradeneho servera
+  telegram.msg.w[STM] = 0; // ziadne prikazy z nadradeneho servera
   // pauza pred nasledujucim cyklom
   delay(1000);
 }

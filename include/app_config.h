@@ -64,6 +64,12 @@
 // povel nastavenie teploty
 #define CMD_TEM_SET 0x0020
 // konstanty pre kodovanie stavov
+// chcem aby sa garaz otvorila
+#define STA_GAR_ON 0x0001
+// chcem aby sa garaz zatvorila
+#define STA_GAR_OFF 0x0002
+// chcem aby sa garaz zastavila pri pohybe
+#define STA_GAR_STOP 0x0003
 // stav chcem mat zapnute svetlo
 #define STA_LIT_ON 0x0004
 // stav chce mat vypnute svetlo
@@ -103,34 +109,18 @@
 #define FBK_RELE_4 0x4000
 // stav rele_5
 #define FBK_RELE_5 0x8000
-/*
-// konstanty pre kodovanie povelu pre Arduino
-const uint16_t CMD_GAR_ON = 0x0001;  // povel garaz otvorit
-const uint16_t CMD_GAR_OFF = 0x0002; // povel garaz zatvorit;
-const uint16_t CMD_LIT_ON = 0x0004;  // povel svetlo zapnut
-const uint16_t CMD_LIT_OFF = 0x0008; // povel svetlo vypnut
-const uint16_t CMD_LIT_AUT = 0x0010; // povel svetlo automat
-const uint16_t CMD_TEM_SET = 0x0020; // povel nastavenie teploty
-// konstanty pre kodovanie stavov
-const uint16_t STA_LIT_ON = 0x0004;  // stav chcem mat zapnute svetlo
-const uint16_t STA_LIT_OFF = 0x0008; // stav chce mat vypnute svetlo
-const uint16_t STA_LIT_AUT = 0x0010; // stav chcem mat automaticke svetlo
-// konstanty pre kodovanie feedbacku od arduina
-const uint16_t FBK_GAR_ON = 0x0001;   // stav garaz otvorena
-const uint16_t FBK_GAR_OFF = 0x0002;  // stav garaz zatvorena
-const uint16_t FBK_LIT_ON = 0x0004;   // stav zapnutie svetla
-const uint16_t FBK_LIT_OFF = 0x0008;  // stav vypnutie svetla
-const uint16_t FBK_LIT_AUT = 0x0010;  // stav svetlo v automate
-const uint16_t FBK_SUN_ON = 0x0020;   // stav zaluzie otvorena
-const uint16_t FBK_ SUN_OFF = 0x0040; // stav zaluzie zatvorena
-const uint16_t FBK_HEAT_ON = 0x0080;  // stav kurenie zapnute
-const uint16_t FBK_COOL_ON = 0x0100;  // stav chladenie zapnute
-const uint16_t FBK_SAFE_ON = 0x0200;  // stav ochrana zapnuta
-const uint16_t FBK_RELE_0 = 0x0400;   // stav rele_0
-const uint16_t FBK_RELE_1 = 0x0800;   // stav rele_1
-const uint16_t FBK_RELE_2 = 0x1000;   // stav rele_2
-const uint16_t FBK_RELE_3 = 0x2000;   // stav rele_3
-const uint16_t FBK_RELE_4 = 0x4000;   // stav rele_4
-const uint16_t FBK_RELE_5 = 0x8000;   // stav rele_5
-*/
+
+// word setpoint teplota
+#define STM 0
+// word actual teplota
+#define ATM 1
+// word actual osvitu
+#define ATB 2
+// status word
+#define STA 7
+// feedback word
+#define FDB 8
+// command word
+#define CMD 9
+
 #endif
