@@ -3,28 +3,6 @@
 
 #include <Arduino.h>
 
-typedef union {
-  struct {
-    word b_00 : 1;
-    word b_01 : 1;
-    word b_02 : 1;
-    word b_03 : 1;
-    word b_04 : 1;
-    word b_05 : 1;
-    word b_06 : 1;
-    word b_07 : 1;
-    word b_08 : 1;
-    word b_09 : 1;
-    word b_10 : 1;
-    word b_11 : 1;
-    word b_12 : 1;
-    word b_13 : 1;
-    word b_14 : 1;
-    word b_15 : 1;
-  } v;
-  word b;
-} B_VALUE;
-
 // celkova bajtova velkost telegramu je: 2*1 + 10*2 + 2*1= 24 bytov
 typedef struct {
   byte stx; // allways STX
@@ -32,16 +10,7 @@ typedef struct {
   //-------------------------------
   // payload
   //-------------------------------
-  B_VALUE b_0; // 2 bytes
-  B_VALUE b_1; // 2 bytes
-  B_VALUE b_2; // 2 bytes
-  B_VALUE b_3; // 2 bytes
-  B_VALUE b_4; // 2 bytes
-  B_VALUE b_5; // 2 bytes
-  B_VALUE b_6; // 2 bytes
-  B_VALUE b_7; // 2 bytes
-  B_VALUE b_8; // 2 bytes
-  B_VALUE b_9; // 2 bytes
+  word w[10];
   //-------------------------------
   // end of payload
   //-------------------------------

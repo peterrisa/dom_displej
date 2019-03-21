@@ -3,9 +3,6 @@
 
 // nastavení čísla prepojovanieho pinu
 #define analogPin A6
-// nastavenie led
-#define LED_18 18
-
 // konstanty pre teplomery
 #define MAX_DS1820_SENSORS 5
 #define INPUT_PIN_14 14
@@ -13,12 +10,12 @@
 #define INPUT_PIN_15 15
 #define INPUT_PIN_16 16
 // konstanty pre relatka
-#define RELE0_PIN_23 23
-#define RELE1_PIN_25 25
-#define RELE2_PIN_27 27
-#define RELE3_PIN_29 29
-#define RELE4_PIN_31 31
-#define RELE5_PIN_33 33
+#define RELE0 23
+#define RELE1 25
+#define RELE2 27
+#define RELE3 29
+#define RELE4 31
+#define RELE5 33
 // konstanty pre displej
 #define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
 #define LCD_CS A3    // Chip Select goes to Analog 3
@@ -38,4 +35,102 @@
 #define BLUGREEN 0x0B74
 #define WHITE 0xFFFF
 
+/* a=target variable, b=bit number to act upon 0-n */
+#define BIT_SET(a, b) ((a) |= (1ULL << (b)))
+#define BIT_CLEAR(a, b) ((a) &= ~(1ULL << (b)))
+#define BIT_FLIP(a, b) ((a) ^= (1ULL << (b)))
+// '!!' to make sure this returns 0 or 1
+#define BIT_CHECK(a, b) (!!((a) & (1ULL << (b))))
+
+/* x=target variable, y=mask */
+#define BITMASK_SET(x, y) ((x) |= (y))
+#define BITMASK_CLEAR(x, y) ((x) &= (~(y)))
+#define BITMASK_FLIP(x, y) ((x) ^= (y))
+// warning: evaluates y twice
+#define BITMASK_CHECK_ALL(x, y) (((x) & (y)) == (y))
+#define BITMASK_CHECK_ANY(x, y) ((x) & (y))
+
+// konstanty pre kodovanie povelu pre Arduino
+// povel garaz otvorit
+#define CMD_GAR_ON 0x0001
+// povel garaz zatvorit
+#define CMD_GAR_OFF 0x0002
+// povel svetlo zapnut
+#define CMD_LIT_ON 0x0004
+// povel svetlo vypnut
+#define CMD_LIT_OFF 0x0008
+// povel svetlo automat
+#define CMD_LIT_AUT 0x0010
+// povel nastavenie teploty
+#define CMD_TEM_SET 0x0020
+// konstanty pre kodovanie stavov
+// stav chcem mat zapnute svetlo
+#define STA_LIT_ON 0x0004
+// stav chce mat vypnute svetlo
+#define STA_LIT_OFF 0x0008
+// stav chcem mat automaticke svetlo
+#define STA_LIT_AUT 0x0010
+// konstanty pre kodovanie feedbacku od arduina
+// stav garaz otvorena
+#define FBK_GAR_ON 0x0001
+// stav garaz zatvorena
+#define FBK_GAR_OFF 0x0002
+// stav zapnutie svetla
+#define FBK_LIT_ON 0x0004
+// stav vypnutie svetla
+#define FBK_LIT_OFF 0x0008
+// stav svetlo v automate
+#define FBK_LIT_AUT 0x0010
+// stav zaluzie otvorena
+#define FBK_SUN_ON 0x0020
+// stav zaluzie zatvorena
+#define FBK_ SUN_OFF 0x0040
+// stav kurenie zapnute
+#define FBK_HEAT_ON 0x0080
+// stav chladenie zapnute
+#define FBK_COOL_ON 0x0100
+// stav ochrana zapnuta
+#define FBK_SAFE_ON 0x0200
+// stav rele_0
+#define FBK_RELE_0 0x0400
+// stav rele_1
+#define FBK_RELE_1 0x0800
+// stav rele_2
+#define FBK_RELE_2 0x1000
+// stav rele_3
+#define FBK_RELE_3 0x2000
+// stav rele_4
+#define FBK_RELE_4 0x4000
+// stav rele_5
+#define FBK_RELE_5 0x8000
+/*
+// konstanty pre kodovanie povelu pre Arduino
+const uint16_t CMD_GAR_ON = 0x0001;  // povel garaz otvorit
+const uint16_t CMD_GAR_OFF = 0x0002; // povel garaz zatvorit;
+const uint16_t CMD_LIT_ON = 0x0004;  // povel svetlo zapnut
+const uint16_t CMD_LIT_OFF = 0x0008; // povel svetlo vypnut
+const uint16_t CMD_LIT_AUT = 0x0010; // povel svetlo automat
+const uint16_t CMD_TEM_SET = 0x0020; // povel nastavenie teploty
+// konstanty pre kodovanie stavov
+const uint16_t STA_LIT_ON = 0x0004;  // stav chcem mat zapnute svetlo
+const uint16_t STA_LIT_OFF = 0x0008; // stav chce mat vypnute svetlo
+const uint16_t STA_LIT_AUT = 0x0010; // stav chcem mat automaticke svetlo
+// konstanty pre kodovanie feedbacku od arduina
+const uint16_t FBK_GAR_ON = 0x0001;   // stav garaz otvorena
+const uint16_t FBK_GAR_OFF = 0x0002;  // stav garaz zatvorena
+const uint16_t FBK_LIT_ON = 0x0004;   // stav zapnutie svetla
+const uint16_t FBK_LIT_OFF = 0x0008;  // stav vypnutie svetla
+const uint16_t FBK_LIT_AUT = 0x0010;  // stav svetlo v automate
+const uint16_t FBK_SUN_ON = 0x0020;   // stav zaluzie otvorena
+const uint16_t FBK_ SUN_OFF = 0x0040; // stav zaluzie zatvorena
+const uint16_t FBK_HEAT_ON = 0x0080;  // stav kurenie zapnute
+const uint16_t FBK_COOL_ON = 0x0100;  // stav chladenie zapnute
+const uint16_t FBK_SAFE_ON = 0x0200;  // stav ochrana zapnuta
+const uint16_t FBK_RELE_0 = 0x0400;   // stav rele_0
+const uint16_t FBK_RELE_1 = 0x0800;   // stav rele_1
+const uint16_t FBK_RELE_2 = 0x1000;   // stav rele_2
+const uint16_t FBK_RELE_3 = 0x2000;   // stav rele_3
+const uint16_t FBK_RELE_4 = 0x4000;   // stav rele_4
+const uint16_t FBK_RELE_5 = 0x8000;   // stav rele_5
+*/
 #endif
