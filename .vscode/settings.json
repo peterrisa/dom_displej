@@ -1,6 +1,0 @@
-{
-    "terminal.integrated.env.linux": {
-        "PATH": "/home/amavet/.platformio/penv/bin:/home/amavet/.platformio/penv:/home/amavet/.vscode-server/bin/2213894ea0415ee8c85c5eea0d0ff81ecc191529/bin:/home/amavet/.vscode-server/bin/2213894ea0415ee8c85c5eea0d0ff81ecc191529/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl",
-        "PLATFORMIO_CALLER": "vscode"
-    }
-}
