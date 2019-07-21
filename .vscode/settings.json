@@ -1,0 +1,6 @@
+{
+    "terminal.integrated.env.linux": {
+        "PATH": "/home/palo/.platformio/penv/bin:/home/palo/.platformio/penv:/home/palo/bin:/home/palo/esp/esp-idf/tools:/home/palo/.local/bin:/home/palo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+        "PLATFORMIO_CALLER": "vscode"
+    }
+}
