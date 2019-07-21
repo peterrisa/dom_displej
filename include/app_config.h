@@ -10,20 +10,13 @@
 #define INPUT_PIN_15 15
 #define INPUT_PIN_16 16
 // konstanty pre relatka
-/*
-#define RELE0 53
-#define RELE1 51
-#define RELE2 49
-#define RELE3 47
-#define RELE4 45
-#define RELE5 41
-*/
-#define RELE0 43    //rezerva
-#define RELE1 45    //rezerva
-#define RELE2 47    //rezerva
-#define RELE3 49    //svetlo
-#define RELE4 51    //pohyb smer garaze
-#define RELE5 53    //motor garaze
+
+#define RELE0 53    //rezerva
+#define RELE1 51    //rezerva
+#define RELE2 49    //rezerva
+#define RELE3 47    //svetlo
+#define RELE4 45    //pohyb smer garaze
+#define RELE5 43    //motor garaze
 // konstanty pre displej
 #define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
 #define LCD_CS A3    // Chip Select goes to Analog 3
