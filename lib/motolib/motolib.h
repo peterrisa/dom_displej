@@ -41,13 +41,13 @@ class LM298N_bridge {
 		LM298N_bridge(){
 			//define arduino pins
 			// motor one is "A"
-			int _enA = 0;
-			int _in1 = 0;
-			int _in2 = 0;
+			_enA = 0;
+			_in1 = 0;
+			_in2 = 0;
 			// motor two is "B"
-			int _enB = 0;
-			int _in3 = 0;
-			int _in4 = 0;
+			_enB = 0;
+			_in3 = 0;
+			_in4 = 0;
 			//preset internal statuses
 			_stopA = true; // true> stopped, false> run
 			_stopB = true; // true> stopped, false> run
@@ -57,14 +57,16 @@ class LM298N_bridge {
 			_speedB = 0; // PWM preset from 0 to 255
 		};
 		//setup arduino, initialize driver
-		setup(enA, in1, in2, enB, in3, in4){
+		void setupA(int enA, int in1, int in2){
 			assert(enA == 0 || in1 == 0 || in2 == 0);
-			assert(enB == 0 || in3 == 0 || in4 == 0);
 			// set all the motor control pins to outputs
 			pinMode(_enA, OUTPUT);
-			pinMode(_enB, OUTPUT);
 			pinMode(_in1, OUTPUT);
 			pinMode(_in2, OUTPUT);
+		};
+		void setupB(int enB, int in3, int in4){
+			assert(enB == 0 || in3 == 0 || in4 == 0);
+			// set all the motor control pins to outputs
 			pinMode(_in3, OUTPUT);
 			pinMode(_in4, OUTPUT);
 		};
@@ -77,7 +79,7 @@ class LM298N_bridge {
 			if(_directionA != dir) {
 				stopA();
 				_directionA = dir;
-				if(_direction) {
+				if(_directionA) {
 					digitalWrite(_in1, HIGH);
 					digitalWrite(_in2, LOW);
 				} else{
@@ -90,7 +92,7 @@ class LM298N_bridge {
 			if(_directionB != dir) {
 				stopB();
 				_directionB = dir;
-				if(_direction) {
+				if(_directionB) {
 					digitalWrite(_in3, HIGH);
 					digitalWrite(_in4, LOW);
 				} else{
@@ -117,7 +119,7 @@ class LM298N_bridge {
 		// start rotating
 		void start(){
 			startA();
-			startB{};
+			startB();
 		};
 		void startA(){
 			assert(_in1 == 0 || _in2 == 0);
@@ -181,6 +183,6 @@ class LM298N_bridge {
 		bool _stopB; // true> stopped, false> run
 		bool _directionB;// true> cw, false> ccw
 		unsigned char _speedB; // PWM preset from 0 to 255		
-}
+};
 
 #endif
