@@ -58,6 +58,10 @@
 #include <MCUFRIEND_kbv.h>
 #include <OneWire.h>
 #include <easy_code.h>
+#include <motolib.h>
+
+// clas pre riadenie motorov
+LM298N_bridge motor;
 
 // funkcia pre nacitanie stavu vystupov
 int digitalReadOutputPin(uint8_t pin);
@@ -78,11 +82,11 @@ Telegram::Telegram() {
 }
 // prekonvertuje ascii string do bufferu
 void Telegram::setBuffer(char *str) {
-  strncpy((byte *)this->getBuffer(), str, Telegram::BUF_LEN);
+  strncpy((char *)this->getBuffer(), str, Telegram::BUF_LEN);
 }
 // prekonvertuje ascii string do telegramu
 void Telegram::setTelegram(char *str) {
-  strncpy((byte *)this->getTelegram(), str, Telegram::MSG_LEN);
+  strncpy((char *)this->getTelegram(), str, Telegram::MSG_LEN);
 }
 // nastavi Uint8 hodnotu v poli TELEGRAM
 void Telegram::setByteInTelegram(int num, byte val) {
@@ -445,14 +449,34 @@ void writeOutputs() {
   if (onMoveToClose) {
     // pohni garaz na zatvorenie
     doGarazToOff();
+    
+    motor.setSpeedA(210);
+    motor.setDirectionA(true);
+    motor.startA();
+
+    motor.setSpeedB(210);
+    motor.setDirectionB(true);
+    motor.startB();
+   
   }
   // ak je poziadavka zatvorit
   if (onMoveToOpen) {
     if (rele1 == LOW) {
       doGarazStop();
+      motor.stopA();
+      motor.stopB();
     }
     // pohni garaz na zatvorenie
     doGarazToOn();
+    
+    motor.setSpeedA(120);
+    motor.setDirectionA(false);
+    motor.startA();
+
+    motor.setSpeedB(120);
+    motor.setDirectionB(false);
+    motor.startB();
+    
   }
 
   //************************************************************
@@ -554,6 +578,8 @@ void urobitPrepocty() {
   word statusNew = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_MASK);
   if (statusOld != statusNew) {
     doGarazStop();
+    motor.stopA();
+    motor.stopB();
   }
   bool onMoveToOpen = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_ON);
   bool onMoveToClose = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_OFF);
@@ -564,11 +590,15 @@ void urobitPrepocty() {
     BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
     BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
     doGarazStop();
+    motor.stopA();
+    motor.stopB();
   }
   if (onMoveToClose && isClosed) {
     BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
     BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
     doGarazStop();
+    motor.stopA();
+    motor.stopB();
   }
 }
 //--------------------------------------------------------------
@@ -627,6 +657,10 @@ int digitalReadOutputPin(uint8_t pin) {
 // nastavenie Arduina
 //--------------------------------------------------------------
 void setup() {
+  //nastavenie motota cez LM298N_bridge
+  motor.setupA(PWM_A, IN1_A, IN2_A);
+  motor.setupB(PWM_B, IN1_B, IN2_B);
+
   //************************************************************
   // commandy
   telegram.msg.w[STM] = 25; // ziadne prikazy z nadradeneho servera

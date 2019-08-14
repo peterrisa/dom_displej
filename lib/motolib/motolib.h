@@ -2,7 +2,6 @@
 #define __MOTOLIB_HANDLER_H__
 
 #include <Arduino.h>
-#include <assert.h>
 
 //Arduino H mostík pro krokový motor L298N Dual H Most DC
 //Here’s a table that summarizes the pins and corresponding motor direction. These assumes you are following the same Fritzing diagram above.
@@ -41,13 +40,13 @@ class LM298N_bridge {
 		LM298N_bridge(){
 			//define arduino pins
 			// motor one is "A"
-			int _enA = 0;
-			int _in1 = 0;
-			int _in2 = 0;
+			_enA = 0;
+			_in1 = 0;
+			_in2 = 0;
 			// motor two is "B"
-			int _enB = 0;
-			int _in3 = 0;
-			int _in4 = 0;
+			_enB = 0;
+			_in3 = 0;
+			_in4 = 0;
 			//preset internal statuses
 			_stopA = true; // true> stopped, false> run
 			_stopB = true; // true> stopped, false> run
@@ -57,14 +56,21 @@ class LM298N_bridge {
 			_speedB = 0; // PWM preset from 0 to 255
 		};
 		//setup arduino, initialize driver
-		setup(enA, in1, in2, enB, in3, in4){
-			assert(enA == 0 || in1 == 0 || in2 == 0);
-			assert(enB == 0 || in3 == 0 || in4 == 0);
+		void setupA(int enA, int in1, int in2){
+			_enA = enA;
+			_in1 = in1;
+			_in2 = in2;
 			// set all the motor control pins to outputs
 			pinMode(_enA, OUTPUT);
-			pinMode(_enB, OUTPUT);
 			pinMode(_in1, OUTPUT);
 			pinMode(_in2, OUTPUT);
+		};
+		void setupB(int enB, int in3, int in4){
+			_enB = enB;
+			_in3 = in3;
+			_in4 = in4;		
+			// set all the motor control pins to outputs
+			pinMode(_enB, OUTPUT);
 			pinMode(_in3, OUTPUT);
 			pinMode(_in4, OUTPUT);
 		};
@@ -77,7 +83,7 @@ class LM298N_bridge {
 			if(_directionA != dir) {
 				stopA();
 				_directionA = dir;
-				if(_direction) {
+				if(_directionA) {
 					digitalWrite(_in1, HIGH);
 					digitalWrite(_in2, LOW);
 				} else{
@@ -90,7 +96,7 @@ class LM298N_bridge {
 			if(_directionB != dir) {
 				stopB();
 				_directionB = dir;
-				if(_direction) {
+				if(_directionB) {
 					digitalWrite(_in3, HIGH);
 					digitalWrite(_in4, LOW);
 				} else{
@@ -105,22 +111,19 @@ class LM298N_bridge {
 			setSpeedB(speed);
 		};
 		void setSpeedA(unsigned char speed){
-			assert(_enA == 0);
 			_speedA = speed;
 			analogWrite(_enA, _speedA);
 		};
 		void setSpeedB(unsigned char speed){
-			assert(_enB == 0);
 			_speedA = speed;
 			analogWrite(_enB, _speedA);
 		};
 		// start rotating
 		void start(){
 			startA();
-			startB{};
+			startB();
 		};
 		void startA(){
-			assert(_in1 == 0 || _in2 == 0);
 			setSpeedA(_speedA);
 			if(_directionA) {
 				digitalWrite(_in1, HIGH);
@@ -131,9 +134,7 @@ class LM298N_bridge {
 			}
 			_stopA = false;
 		};
-		void startB(){
-			assert(_in3 == 0 || _in4 == 0);
-			
+		void startB(){			
 			setSpeedB(_speedB);
 			if(_directionA) {
 				digitalWrite(_in3, HIGH);
@@ -150,7 +151,6 @@ class LM298N_bridge {
 			stopB();
 		};
 		void stopA(){
-			assert(_enA || _in1 == 0 || _in2 == 0);
 			// now turn off motor A
 			analogWrite(_enA, 0);
 			digitalWrite(_in1, LOW);
@@ -158,7 +158,6 @@ class LM298N_bridge {
 			_stopA = true;
 		};
 		void stopB(){
-			assert(_enB || _in3 == 0 || _in4 == 0);
 			// now turn off motor B
 			analogWrite(_enB, 0);
 			digitalWrite(_in3, LOW);
@@ -170,9 +169,7 @@ class LM298N_bridge {
 		// motor one is "A"
 		int _enA, _in1, _in2;
 		// motor two is "B"
-		int _enB;
-		int _in3;
-		int _in4;
+		int _enB, _in3, _in4;
 		
 		//motor driver internal statuses
 		bool _stopA; // true> stopped, false> run
@@ -181,6 +178,6 @@ class LM298N_bridge {
 		bool _stopB; // true> stopped, false> run
 		bool _directionB;// true> cw, false> ccw
 		unsigned char _speedB; // PWM preset from 0 to 255		
-}
+};
 
 #endif
