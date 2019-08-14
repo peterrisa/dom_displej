@@ -3,11 +3,11 @@
 
 //nastavenie pinov pre motory
 //motor garaze A
-#define PWM_A 44
+#define PWM_A 46
 #define IN1_A 42
 #define IN2_A 40
 //motor zaclony B
-#define PWM_B 46
+#define PWM_B 44
 #define IN1_B 38
 #define IN2_B 36
 // nastavení čísla prepojovanieho pinu

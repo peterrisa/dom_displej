@@ -2,7 +2,6 @@
 #define __MOTOLIB_HANDLER_H__
 
 #include <Arduino.h>
-#include <assert.h>
 
 //Arduino H mostík pro krokový motor L298N Dual H Most DC
 //Here’s a table that summarizes the pins and corresponding motor direction. These assumes you are following the same Fritzing diagram above.
@@ -58,7 +57,6 @@ class LM298N_bridge {
 		};
 		//setup arduino, initialize driver
 		void setupA(int enA, int in1, int in2){
-			assert(enA == 0 || in1 == 0 || in2 == 0);
 			_enA = enA;
 			_in1 = in1;
 			_in2 = in2;
@@ -68,10 +66,9 @@ class LM298N_bridge {
 			pinMode(_in2, OUTPUT);
 		};
 		void setupB(int enB, int in3, int in4){
-			assert(enB == 0 || in3 == 0 || in4 == 0);
 			_enB = enB;
 			_in3 = in3;
-			_in4 = in4;			
+			_in4 = in4;		
 			// set all the motor control pins to outputs
 			pinMode(_enB, OUTPUT);
 			pinMode(_in3, OUTPUT);
@@ -114,12 +111,10 @@ class LM298N_bridge {
 			setSpeedB(speed);
 		};
 		void setSpeedA(unsigned char speed){
-			assert(_enA == 0);
 			_speedA = speed;
 			analogWrite(_enA, _speedA);
 		};
 		void setSpeedB(unsigned char speed){
-			assert(_enB == 0);
 			_speedA = speed;
 			analogWrite(_enB, _speedA);
 		};
@@ -129,7 +124,6 @@ class LM298N_bridge {
 			startB();
 		};
 		void startA(){
-			assert(_in1 == 0 || _in2 == 0);
 			setSpeedA(_speedA);
 			if(_directionA) {
 				digitalWrite(_in1, HIGH);
@@ -140,9 +134,7 @@ class LM298N_bridge {
 			}
 			_stopA = false;
 		};
-		void startB(){
-			assert(_in3 == 0 || _in4 == 0);
-			
+		void startB(){			
 			setSpeedB(_speedB);
 			if(_directionA) {
 				digitalWrite(_in3, HIGH);
@@ -159,7 +151,6 @@ class LM298N_bridge {
 			stopB();
 		};
 		void stopA(){
-			assert(_enA || _in1 == 0 || _in2 == 0);
 			// now turn off motor A
 			analogWrite(_enA, 0);
 			digitalWrite(_in1, LOW);
@@ -167,7 +158,6 @@ class LM298N_bridge {
 			_stopA = true;
 		};
 		void stopB(){
-			assert(_enB || _in3 == 0 || _in4 == 0);
 			// now turn off motor B
 			analogWrite(_enB, 0);
 			digitalWrite(_in3, LOW);
