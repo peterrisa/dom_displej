@@ -450,9 +450,13 @@ void writeOutputs() {
     // pohni garaz na zatvorenie
     doGarazToOff();
     
-    motor.setSpeedA(120);
+    motor.setSpeedA(210);
     motor.setDirectionA(true);
     motor.startA();
+
+    motor.setSpeedB(210);
+    motor.setDirectionB(true);
+    motor.startB();
    
   }
   // ak je poziadavka zatvorit
@@ -460,6 +464,7 @@ void writeOutputs() {
     if (rele1 == LOW) {
       doGarazStop();
       motor.stopA();
+      motor.stopB();
     }
     // pohni garaz na zatvorenie
     doGarazToOn();
@@ -467,6 +472,10 @@ void writeOutputs() {
     motor.setSpeedA(120);
     motor.setDirectionA(false);
     motor.startA();
+
+    motor.setSpeedB(120);
+    motor.setDirectionB(false);
+    motor.startB();
     
   }
 
@@ -570,6 +579,7 @@ void urobitPrepocty() {
   if (statusOld != statusNew) {
     doGarazStop();
     motor.stopA();
+    motor.stopB();
   }
   bool onMoveToOpen = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_ON);
   bool onMoveToClose = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_OFF);
@@ -581,12 +591,14 @@ void urobitPrepocty() {
     BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
     doGarazStop();
     motor.stopA();
+    motor.stopB();
   }
   if (onMoveToClose && isClosed) {
     BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
     BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
     doGarazStop();
     motor.stopA();
+    motor.stopB();
   }
 }
 //--------------------------------------------------------------
