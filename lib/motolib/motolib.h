@@ -59,6 +59,9 @@ class LM298N_bridge {
 		//setup arduino, initialize driver
 		void setupA(int enA, int in1, int in2){
 			assert(enA == 0 || in1 == 0 || in2 == 0);
+			_enA = enA;
+			_in1 = in1;
+			_in2 = in2;
 			// set all the motor control pins to outputs
 			pinMode(_enA, OUTPUT);
 			pinMode(_in1, OUTPUT);
@@ -66,7 +69,11 @@ class LM298N_bridge {
 		};
 		void setupB(int enB, int in3, int in4){
 			assert(enB == 0 || in3 == 0 || in4 == 0);
+			_enB = enB;
+			_in3 = in3;
+			_in4 = in4;			
 			// set all the motor control pins to outputs
+			pinMode(_enB, OUTPUT);
 			pinMode(_in3, OUTPUT);
 			pinMode(_in4, OUTPUT);
 		};
@@ -172,9 +179,7 @@ class LM298N_bridge {
 		// motor one is "A"
 		int _enA, _in1, _in2;
 		// motor two is "B"
-		int _enB;
-		int _in3;
-		int _in4;
+		int _enB, _in3, _in4;
 		
 		//motor driver internal statuses
 		bool _stopA; // true> stopped, false> run

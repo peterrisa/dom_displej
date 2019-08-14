@@ -449,21 +449,25 @@ void writeOutputs() {
   if (onMoveToClose) {
     // pohni garaz na zatvorenie
     doGarazToOff();
+/*    
     motor.setSpeedA(120);
     motor.setDirectionA(true);
     motor.startA();
+*/    
   }
   // ak je poziadavka zatvorit
   if (onMoveToOpen) {
     if (rele1 == LOW) {
       doGarazStop();
-      motor.stopA();
+//      motor.stopA();
     }
     // pohni garaz na zatvorenie
     doGarazToOn();
+/*    
     motor.setSpeedA(120);
     motor.setDirectionA(false);
     motor.startA();
+*/    
   }
 
   //************************************************************
@@ -565,7 +569,7 @@ void urobitPrepocty() {
   word statusNew = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_MASK);
   if (statusOld != statusNew) {
     doGarazStop();
-    motor.stopA();
+//    motor.stopA();
   }
   bool onMoveToOpen = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_ON);
   bool onMoveToClose = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_OFF);
@@ -576,13 +580,13 @@ void urobitPrepocty() {
     BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
     BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
     doGarazStop();
-    motor.stopA();
+//    motor.stopA();
   }
   if (onMoveToClose && isClosed) {
     BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
     BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
     doGarazStop();
-    motor.stopA();
+//    motor.stopA();
   }
 }
 //--------------------------------------------------------------
