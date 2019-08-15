@@ -176,7 +176,7 @@ void Telegram::encodeTelegram() {
 void Telegram::decodeTelegram() {
   byte *b_msg = (byte *)this->getTelegram();
   byte *buf = (byte *)this->getBuffer();
-  byte a, b, c;
+  byte a, b;
 
   for (int i = 0, j = 0; i < Telegram::MSG_LEN; i++) {
     a = (buf[j] - Telegram::ADD) & 0x0F;
@@ -231,7 +231,8 @@ void setup_lcd() {
   tft.begin(identifier);
 
   tft.fillScreen(BLACK);
-  unsigned long start = micros();
+  //unsigned long start = 
+  micros();
   // Otočenie obrazovky (o 90 stupňov) (0=0, 1=90, 2=180, 3=270)
   tft.setRotation(3);
 }
@@ -416,88 +417,57 @@ void readInputs() {
 // aktualizovat vystupy Arduina
 //--------------------------------------------------------------
 void doGarazStop() {
-  delay(200);
-  digitalWrite(RELE0, HIGH); // relé 0 vypnut
-  delay(200);
-  digitalWrite(RELE1, HIGH); // relé 1 vypnut
+      motor.stopA();
+      motor.stopB();
 }
 
 void doGarazToOn() {
-  delay(200);
-  digitalWrite(RELE1, HIGH); // relé 1 vypnut
-  delay(200);
-  digitalWrite(RELE0, LOW); // relé 0 zapnut
+    motor.setSpeedA(GARAGE_SPEED_OPEN);
+    motor.setDirectionA(false);
+    motor.startA();
 }
 
 void doGarazToOff() {
-  delay(200);
-  digitalWrite(RELE1, LOW); // relé 1 zapnut
-  delay(200);
-  digitalWrite(RELE0, LOW); // relé 0 zapnut
+    motor.setSpeedA(GARAGE_SPEED_CLOSE);
+    motor.setDirectionA(true);
+    motor.startA();
 }
 
 void writeOutputs() {
   // nastavenie vystupov , relatok
   //************************************************************
-  // vyhodnotenie pohybu garaze
-  // zisti ktorym smerom sa garaz hybe
-  int rele0 = digitalReadOutputPin(RELE0);
-  int rele1 = digitalReadOutputPin(RELE1);
   bool onMoveToOpen = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_ON);
   bool onMoveToClose = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_OFF);
   // ak je poziadavka zatvorit
   if (onMoveToClose) {
     // pohni garaz na zatvorenie
-    doGarazToOff();
-    
-    motor.setSpeedA(210);
-    motor.setDirectionA(true);
-    motor.startA();
-
-    motor.setSpeedB(210);
-    motor.setDirectionB(true);
-    motor.startB();
-   
+    doGarazToOff();   
   }
   // ak je poziadavka zatvorit
   if (onMoveToOpen) {
-    if (rele1 == LOW) {
-      doGarazStop();
-      motor.stopA();
-      motor.stopB();
-    }
     // pohni garaz na zatvorenie
-    doGarazToOn();
-    
-    motor.setSpeedA(120);
-    motor.setDirectionA(false);
-    motor.startA();
-
-    motor.setSpeedB(120);
-    motor.setDirectionB(false);
-    motor.startB();
-    
-  }
+      doGarazToOn();
+ }
 
   //************************************************************
   // zapnutie svetiel
   // 12V zapnutie LED svetiel
   // ak sa ma svetlo zapnut
   if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_LIT_ON)) {
-    digitalWrite(RELE2, LOW); // relé 2 zapnut
+    digitalWrite(RELE1, LOW); // relé 1 zapnut
   }
   // ak sa ma svetlo vypnut
   if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_LIT_OFF)) {
-    digitalWrite(RELE2, HIGH); // relé 2 vypnut
+    digitalWrite(RELE1, HIGH); // relé 1 vypnut
   }
   // ak sa ma svetlo zapnut automaticky
   if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_LIT_AUT)) {
     // vyhodnotit osvit
     int i_val = (int)telegram.msg.w[ATB];
     if (i_val < 20) {
-      digitalWrite(RELE2, LOW); // relé 2 zapnut
+      digitalWrite(RELE1, LOW); // relé 1 zapnut
     } else {
-      digitalWrite(RELE2, HIGH); // relé 2 vypnut}
+      digitalWrite(RELE1, HIGH); // relé 1 vypnut}
     }
   }
   // odlozit aktualny stav relatok do feedbacku
@@ -510,11 +480,6 @@ void writeOutputs() {
     BITMASK_CLEAR(telegram.msg.w[FDB], FBK_RELE_1);
   } else {
     BITMASK_SET(telegram.msg.w[FDB], FBK_RELE_1);
-  }
-  if (digitalReadOutputPin(RELE2) == HIGH) {
-    BITMASK_CLEAR(telegram.msg.w[FDB], FBK_RELE_2);
-  } else {
-    BITMASK_SET(telegram.msg.w[FDB], FBK_RELE_2);
   }
 }
 //--------------------------------------------------------------
@@ -578,8 +543,6 @@ void urobitPrepocty() {
   word statusNew = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_MASK);
   if (statusOld != statusNew) {
     doGarazStop();
-    motor.stopA();
-    motor.stopB();
   }
   bool onMoveToOpen = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_ON);
   bool onMoveToClose = BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_GAR_OFF);
@@ -590,16 +553,12 @@ void urobitPrepocty() {
     BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
     BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
     doGarazStop();
-    motor.stopA();
-    motor.stopB();
-  }
+   }
   if (onMoveToClose && isClosed) {
     BITMASK_CLEAR(telegram.msg.w[STA], STA_MASK);
     BITMASK_SET(telegram.msg.w[STA], STA_GAR_STOP);
     doGarazStop();
-    motor.stopA();
-    motor.stopB();
-  }
+   }
 }
 //--------------------------------------------------------------
 // nacitaj data zo serveru
@@ -613,7 +572,8 @@ void readFromServer() {
       new_msg.setByteInBuffer(i, c);
     }
     while (Serial.available()) {
-      byte c = Serial.read();
+      //byte c = 
+      Serial.read();
     }
     //    Serial.println((char *)new_msg.getBuffer());
     // dekoduj spravu od servera
@@ -659,7 +619,6 @@ int digitalReadOutputPin(uint8_t pin) {
 void setup() {
   //nastavenie motota cez LM298N_bridge
   motor.setupA(PWM_A, IN1_A, IN2_A);
-  motor.setupB(PWM_B, IN1_B, IN2_B);
 
   //************************************************************
   // commandy
@@ -670,18 +629,11 @@ void setup() {
   pinMode(INPUT_PIN_15, INPUT); // kontakt otvorena garaz
   pinMode(INPUT_PIN_16, INPUT); // kontakt zatvorena garaz
   // nastavenie vystupov , relatok
+  pinMode(RELE1, OUTPUT); // 12V zapnutie LED svetiel
+  digitalWrite(RELE1, HIGH);
   pinMode(RELE0, OUTPUT); // rezerva
   digitalWrite(RELE0, HIGH);
-  pinMode(RELE1, OUTPUT); // rezerva
-  digitalWrite(RELE1, HIGH);
-  pinMode(RELE2, OUTPUT); // 12V rezerva
-  digitalWrite(RELE2, HIGH);
-  pinMode(RELE3, OUTPUT); // 12V zapnutie LED svetiel
-  digitalWrite(RELE3, HIGH);
-  pinMode(RELE4, OUTPUT); // 12V nastavenie smeru pohybu motora garaze
-  digitalWrite(RELE4, HIGH);
-  pinMode(RELE5, OUTPUT); // 5V zapnutie motora garaze
-  digitalWrite(RELE5, HIGH);
+
   //************************************************************
   // začni komunikovať s teplomermi
   senzoryDS.begin();
@@ -757,5 +709,5 @@ void loop() {
   //************************************************************
   telegram.msg.w[CMD] = 0; // ziadne prikazy z nadradeneho servera
   // pauza pred nasledujucim cyklom
-  delay(500);
+  delay(LOOP_DELAY);
 }

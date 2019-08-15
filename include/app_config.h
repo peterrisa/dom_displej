@@ -1,11 +1,15 @@
 #ifndef __APP_CONFIG_HANDLER_H__
 #define __APP_CONFIG_HANDLER_H__
 
+//nastavenie opakovacej slocky, cislo je v ms
+#define LOOP_DELAY 100
 //nastavenie pinov pre motory
 //motor garaze A
 #define PWM_A 46
 #define IN1_A 42
 #define IN2_A 40
+#define GARAGE_SPEED_CLOSE 225
+#define GARAGE_SPEED_OPEN 255
 //motor zaclony B
 #define PWM_B 44
 #define IN1_B 38
@@ -20,12 +24,9 @@
 #define INPUT_PIN_16 16
 // konstanty pre relatka
 
-#define RELE0 53    //rezerva
-#define RELE1 51    //rezerva
-#define RELE2 49    //rezerva
-#define RELE3 47    //svetlo
-#define RELE4 45    //pohyb smer garaze
-#define RELE5 43    //motor garaze
+#define RELE0 51    //svetlo
+#define RELE1 53    //rezerva
+
 // konstanty pre displej
 #define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
 #define LCD_CS A3    // Chip Select goes to Analog 3
