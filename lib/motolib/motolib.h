@@ -115,8 +115,8 @@ class LM298N_bridge {
 			analogWrite(_enA, _speedA);
 		};
 		void setSpeedB(unsigned char speed){
-			_speedA = speed;
-			analogWrite(_enB, _speedA);
+			_speedB = speed;
+			analogWrite(_enB, _speedB);
 		};
 		// start rotating
 		void start(){
@@ -136,7 +136,7 @@ class LM298N_bridge {
 		};
 		void startB(){			
 			setSpeedB(_speedB);
-			if(_directionA) {
+			if(_directionB) {
 				digitalWrite(_in3, HIGH);
 				digitalWrite(_in4, LOW);
 			} else{

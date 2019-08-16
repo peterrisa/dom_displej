@@ -187,6 +187,28 @@ void Telegram::decodeTelegram() {
     b_msg[i] = a | (b << 4);
   }
 }
+//ovladanie zaluzii
+void otvorZaluzie(){
+  if(zaclonyPoloha == true) 
+    return;
+  motor.setSpeedB(ZACLONY_SPEED);
+  motor.setDirectionB(true);
+  motor.startB();
+  delay(ZACLONY_DELAY_TO_TRANSFER);
+  motor.stopB();
+  zaclonyPoloha = true;
+}
+
+void zatvorZaluzie(){
+  if(zaclonyPoloha == false) 
+    return;
+  motor.setSpeedB(ZACLONY_SPEED);
+  motor.setDirectionB(false);
+  motor.startB();
+  delay(ZACLONY_DELAY_TO_TRANSFER);
+  motor.stopB();
+  zaclonyPoloha = false;
+}
 //--------------------------------------------------------------
 // nastavenia pre teplomery
 //--------------------------------------------------------------
@@ -620,28 +642,7 @@ int digitalReadOutputPin(uint8_t pin) {
 
   return (*portOutputRegister(port) & bit) ? HIGH : LOW;
 }
-//ovladanie zaluzii
-void otvorZaluzie(){
-  if(zaclonyPoloha == true) 
-    return;
-  motor.speedB(ZACLONY_SPEED);
-  motor.setDirectionB(true);
-  motor.startB();
-  delay(ZACLONY_DELAY_TO_TRANSFER);
-  motor.stopB();
-  zaclonyPoloha = true;
-}
 
-void zatvorZaluzie(){
-  if(zaclonyPoloha == false) 
-    return;
-  motor.speedB(ZACLONY_SPEED);
-  motor.setDirectionB(false);
-  motor.startB();
-  delay(ZACLONY_DELAY_TO_TRANSFER);
-  motor.stopB();
-  zaclonyPoloha = false;
-}
 //--------------------------------------------------------------
 // nastavenie Arduina
 //--------------------------------------------------------------
