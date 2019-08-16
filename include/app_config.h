@@ -17,8 +17,8 @@
 #define PWM_B 44
 #define IN1_B 38
 #define IN2_B 36
-#define ZACLONY_SPEED 70
-#define ZACLONY_DELAY_TO_TRANSFER 200 
+#define ZACLONY_SPEED 200
+#define ZACLONY_DELAY_TO_TRANSFER 1000 
 // nastavení čísla prepojovanieho pinu
 #define analogPin A6
 // konstanty pre teplomery
