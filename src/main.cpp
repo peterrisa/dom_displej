@@ -650,7 +650,7 @@ void setup() {
   //nastavenie motota cez LM298N_bridge
   motor.setupA(PWM_A, IN1_A, IN2_A);
   //zaclony sa budu hybat pomocou motora B
-  motor.setupA(PWM_B, IN1_B, IN2_B);
+  motor.setupB(PWM_B, IN1_B, IN2_B);
   //vykonaj prvý pohyb so záclonami aby si definoval ich polohu
   otvorZaluzie();
 
