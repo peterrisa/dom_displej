@@ -62,7 +62,8 @@
 
 // clas pre riadenie motorov
 LM298N_bridge motor;
-
+// pomocná premenná pre definovanie polohy záclom true = otvorené, false = zatvorené
+bool zaclonyPoloha = false;
 // funkcia pre nacitanie stavu vystupov
 int digitalReadOutputPin(uint8_t pin);
 
@@ -464,10 +465,16 @@ void writeOutputs() {
   if (BITMASK_CHECK_ALL(telegram.msg.w[STA], STA_LIT_AUT)) {
     // vyhodnotit osvit
     int i_val = (int)telegram.msg.w[ATB];
-    if (i_val < 20) {
+    if (i_val < ZAPNUTIE_SVETIEL_HRANICA) {
       digitalWrite(RELE1, LOW); // relé 1 zapnut
     } else {
       digitalWrite(RELE1, HIGH); // relé 1 vypnut}
+    }
+// vyhodnotit zatvorenie zaclon od osvitu
+    if (i_val < ZATVORENIE_ZACLON_HRANICA) {
+     zatvorZaluzie();
+    } else {
+      otvorZaluzie();
     }
   }
   // odlozit aktualny stav relatok do feedbacku
@@ -613,12 +620,39 @@ int digitalReadOutputPin(uint8_t pin) {
 
   return (*portOutputRegister(port) & bit) ? HIGH : LOW;
 }
+//ovladanie zaluzii
+void otvorZaluzie(){
+  if(zaclonyPoloha == true) 
+    return;
+  motor.speedB(ZACLONY_SPEED);
+  motor.setDirectionB(true);
+  motor.startB();
+  delay(ZACLONY_DELAY_TO_TRANSFER);
+  motor.stopB();
+  zaclonyPoloha = true;
+}
+
+void zatvorZaluzie(){
+  if(zaclonyPoloha == false) 
+    return;
+  motor.speedB(ZACLONY_SPEED);
+  motor.setDirectionB(false);
+  motor.startB();
+  delay(ZACLONY_DELAY_TO_TRANSFER);
+  motor.stopB();
+  zaclonyPoloha = false;
+}
 //--------------------------------------------------------------
 // nastavenie Arduina
 //--------------------------------------------------------------
 void setup() {
   //nastavenie motota cez LM298N_bridge
   motor.setupA(PWM_A, IN1_A, IN2_A);
+  //zaclony sa budu hybat pomocou motora B
+  motor.setupA(PWM_B, IN1_B, IN2_B);
+  //vykonaj prvý pohyb so záclonami aby si definoval ich polohu
+  otvorZaluzie();
+
 
   //************************************************************
   // commandy

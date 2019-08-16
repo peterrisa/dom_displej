@@ -3,6 +3,9 @@
 
 //nastavenie opakovacej slocky, cislo je v ms
 #define LOOP_DELAY 100
+//automaticke zapinania od osvitu
+#define ZAPNUTIE_SVETIEL_HRANICA 20
+#define ZATVORENIE_ZACLON_HRANICA 50
 //nastavenie pinov pre motory
 //motor garaze A
 #define PWM_A 46
@@ -14,6 +17,8 @@
 #define PWM_B 44
 #define IN1_B 38
 #define IN2_B 36
+#define ZACLONY_SPEED 70
+#define ZACLONY_DELAY_TO_TRANSFER 200 
 // nastavení čísla prepojovanieho pinu
 #define analogPin A6
 // konstanty pre teplomery
