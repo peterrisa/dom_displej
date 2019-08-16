@@ -40,50 +40,30 @@ class LM298N_bridge {
 		LM298N_bridge(){
 			//define arduino pins
 			// motor one is "A"
-			_enA = 0;
+			_en = 0;
 			_in1 = 0;
 			_in2 = 0;
-			// motor two is "B"
-			_enB = 0;
-			_in3 = 0;
-			_in4 = 0;
 			//preset internal statuses
-			_stopA = true; // true> stopped, false> run
-			_stopB = true; // true> stopped, false> run
-			_directionA = true;// true> cw, false> ccw
-			_directionB = true;// true> cw, false> ccw
-			_speedA = 0; // PWM preset from 0 to 255
-			_speedB = 0; // PWM preset from 0 to 255
+			_stop = true; // true> stopped, false> run
+			_direction = true;// true> cw, false> ccw
+			_speed = 0; // PWM preset from 0 to 255
 		};
 		//setup arduino, initialize driver
-		void setupA(int enA, int in1, int in2){
-			_enA = enA;
+		void setup(int en, int in1, int in2){
+			_en = en;
 			_in1 = in1;
 			_in2 = in2;
 			// set all the motor control pins to outputs
-			pinMode(_enA, OUTPUT);
+			pinMode(_en, OUTPUT);
 			pinMode(_in1, OUTPUT);
 			pinMode(_in2, OUTPUT);
 		};
-		void setupB(int enB, int in3, int in4){
-			_enB = enB;
-			_in3 = in3;
-			_in4 = in4;		
-			// set all the motor control pins to outputs
-			pinMode(_enB, OUTPUT);
-			pinMode(_in3, OUTPUT);
-			pinMode(_in4, OUTPUT);
-		};
 		// change direction true = cw, false = ccw
 		void setDirection(bool dir){
-			setDirectionA(dir);
-			setDirectionB(dir);
-		};
-		void setDirectionA(bool dir){
-			if(_directionA != dir) {
-				stopA();
-				_directionA = dir;
-				if(_directionA) {
+			if(_direction != dir) {
+				stop();
+				_direction = dir;
+				if(_direction) {
 					digitalWrite(_in1, HIGH);
 					digitalWrite(_in2, LOW);
 				} else{
@@ -92,92 +72,40 @@ class LM298N_bridge {
 				}
 			}
 		};
-		void setDirectionB(bool dir){
-			if(_directionB != dir) {
-				stopB();
-				_directionB = dir;
-				if(_directionB) {
-					digitalWrite(_in3, HIGH);
-					digitalWrite(_in4, LOW);
-				} else{
-					digitalWrite(_in3, LOW);
-					digitalWrite(_in4, HIGH);					
-				}
-			}
-		};
 		// preset speed
 		void setSpeed(unsigned char speed){
-			setSpeedA(speed);
-			setSpeedB(speed);
-		};
-		void setSpeedA(unsigned char speed){
-			_speedA = speed;
-			analogWrite(_enA, _speedA);
-		};
-		void setSpeedB(unsigned char speed){
-			_speedB = speed;
-			analogWrite(_enB, _speedB);
+			_speed = speed;
+			analogWrite(_en, _speed);
 		};
 		// start rotating
 		void start(){
-			startA();
-			startB();
-		};
-		void startA(){
-			setSpeedA(_speedA);
-			if(_directionA) {
+			setSpeed(_speed);
+			if(_direction) {
 				digitalWrite(_in1, HIGH);
 				digitalWrite(_in2, LOW);
 			} else{
 				digitalWrite(_in1, LOW);
 				digitalWrite(_in2, HIGH);					
 			}
-			_stopA = false;
+			_stop = false;
 		};
-		void startB(){			
-			setSpeedB(_speedB);
-			if(_directionB) {
-				digitalWrite(_in3, HIGH);
-				digitalWrite(_in4, LOW);
-			} else{
-				digitalWrite(_in3, LOW);
-				digitalWrite(_in4, HIGH);					
-			}
-			_stopB = false;
-		};
-		// stop rotating both motors
+		// stop rotating both motor
 		void stop(){
-			stopA();
-			stopB();
-		};
-		void stopA(){
-			// now turn off motor A
-			analogWrite(_enA, 0);
+			// now turn off motor
+			analogWrite(_en, 0);
 			digitalWrite(_in1, LOW);
 			digitalWrite(_in2, LOW); 
-			_stopA = true;
-		};
-		void stopB(){
-			// now turn off motor B
-			analogWrite(_enB, 0);
-			digitalWrite(_in3, LOW);
-			digitalWrite(_in4, LOW);
-			_stopB = true;
+			_stop = true;
 		};
 	private:
 		// connect motor controller pins to Arduino digital pins
 		// motor one is "A"
-		int _enA, _in1, _in2;
-		// motor two is "B"
-		int _enB, _in3, _in4;
+		int _en, _in1, _in2;
 		
 		//motor driver internal statuses
-		bool _stopA; // true> stopped, false> run
-		bool _directionA;// true> cw, false> ccw
-		unsigned char _speedA; // PWM preset from 0 to 255
-		bool _stopB; // true> stopped, false> run
-		bool _directionB;// true> cw, false> ccw
-		unsigned char _speedB; // PWM preset from 0 to 255		
+		bool _stop; // true> stopped, false> run
+		bool _direction;// true> cw, false> ccw
+		unsigned char _speed; // PWM preset from 0 to 255		
 };
 
 #endif

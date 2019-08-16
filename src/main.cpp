@@ -61,7 +61,8 @@
 #include <motolib.h>
 
 // clas pre riadenie motorov
-LM298N_bridge motor;
+LM298N_bridge motorA;
+LM298N_bridge motorB;
 // pomocná premenná pre definovanie polohy záclom true = otvorené, false = zatvorené
 bool zaclonyPoloha = false;
 // funkcia pre nacitanie stavu vystupov
@@ -191,22 +192,22 @@ void Telegram::decodeTelegram() {
 void otvorZaluzie(){
   if(zaclonyPoloha == true) 
     return;
-  motor.setSpeedB(ZACLONY_SPEED);
-  motor.setDirectionB(true);
-  motor.startB();
+  motorB.setSpeed(ZACLONY_SPEED);
+  motorB.setDirection(true);
+  motorB.start();
   delay(ZACLONY_DELAY_TO_TRANSFER);
-  motor.stopB();
+  motorB.stop();
   zaclonyPoloha = true;
 }
 
 void zatvorZaluzie(){
   if(zaclonyPoloha == false) 
     return;
-  motor.setSpeedB(ZACLONY_SPEED);
-  motor.setDirectionB(false);
-  motor.startB();
+  motorB.setSpeed(ZACLONY_SPEED);
+  motorB.setDirection(false);
+  motorB.start();
   delay(ZACLONY_DELAY_TO_TRANSFER);
-  motor.stopB();
+  motorB.stop();
   zaclonyPoloha = false;
 }
 //--------------------------------------------------------------
@@ -440,20 +441,19 @@ void readInputs() {
 // aktualizovat vystupy Arduina
 //--------------------------------------------------------------
 void doGarazStop() {
-      motor.stopA();
-      motor.stopB();
+      motorA.stop();
 }
 
 void doGarazToOn() {
-    motor.setSpeedA(GARAGE_SPEED_OPEN);
-    motor.setDirectionA(false);
-    motor.startA();
+    motorA.setSpeed(GARAGE_SPEED_OPEN);
+    motorA.setDirection(false);
+    motorA.start();
 }
 
 void doGarazToOff() {
-    motor.setSpeedA(GARAGE_SPEED_CLOSE);
-    motor.setDirectionA(true);
-    motor.startA();
+    motorA.setSpeed(GARAGE_SPEED_CLOSE);
+    motorA.setDirection(true);
+    motorA.start();
 }
 
 void writeOutputs() {
@@ -648,9 +648,9 @@ int digitalReadOutputPin(uint8_t pin) {
 //--------------------------------------------------------------
 void setup() {
   //nastavenie motota cez LM298N_bridge
-  motor.setupA(PWM_A, IN1_A, IN2_A);
+  motorA.setup(PWM_A, IN1_A, IN2_A);
   //zaclony sa budu hybat pomocou motora B
-  motor.setupB(PWM_B, IN1_B, IN2_B);
+  motorB.setup(PWM_B, IN1_B, IN2_B);
   //vykonaj prvý pohyb so záclonami aby si definoval ich polohu
   otvorZaluzie();
 
