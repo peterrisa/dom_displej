@@ -116,7 +116,7 @@ public:
 const int ZAPNUTIE_SVETIEL_HRANICA = 20;
 const int ZATVORENIE_ZACLON_HRANICA = 50;
 const int LIGHT_SENSOR_PIN = A6;
-const int LIGHT_RELAY_PIN = 51;
+const int LIGHT_RELAY_PIN = 53;//51
 // konstanty pre relatka
 
 class Light

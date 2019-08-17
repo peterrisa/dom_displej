@@ -59,17 +59,17 @@
 // funkcia pre nacitanie stavu vystupov
 int digitalReadOutputPin(uint8_t pin);
 // zaluzie
-Louver louver;
+Louver *louver;
 // garaz
-Garage garage;
+Garage *garage;
 // svetlo
-Light light;
+Light *light;
 // teplota
-Temp temp;
+Temp *temp;
 //televizor
-Television television;
+Television *television;
 //server
-Server server;
+Server *server;
 
 //--------------------------------------------------------------
 // nacitaj vstupy z Arduina
@@ -80,48 +80,48 @@ void readInputs()
     // načtení hodnoty z analogového pinu
     // Světelný senzor TEMT6000
     // vytvoření proměnných pro výsledky měření
-    int osvit = light.doLightReadExposure();
-    television.setExposition(osvit);
+    int osvit = light->doLightReadExposure();
+    television->setExposition(osvit);
 
     // přepočet analogové hodnoty z celého rozsahu
     //  0-1023 na procentuální rozsah 0-100
     int prepocet = map(osvit, 0, 1023, 0, 100);
     // zapamataj vypocitany osvit
-    server.telegram.msg.w[Server::ATB] = (word)prepocet;
+    server->telegram.msg.w[Server::ATB] = (word)prepocet;
     //************************************************************
     // TEPLOMER
-    temp.doRead();
-    float teplota = temp.getTemp();
-    television.setSetTemp((int)teplota);
+    temp->doRead();
+    float teplota = temp->getTemp();
+    television->setSetTemp((int)teplota);
     // zapamataj aktualnu teplotu
-    server.telegram.msg.w[Server::ATM] = teplota;
+    server->telegram.msg.w[Server::ATM] = teplota;
     //************************************************************
     // nacitaj stav binarnych vstupov
     // nastavenie koncovych poloh garaze otvorena poloha
     if (digitalRead(OPEN_LIMIT_PIN) == HIGH)
     { // kontakt otvorene true
-        garage.setOpened(true);
-        television.setOpened(true);
-        BITMASK_CLEAR(server.telegram.msg.w[Server::FDB], Server::FBK_GAR_ON);
+        garage->setOpened(true);
+        television->setOpened(true);
+        BITMASK_CLEAR(server->telegram.msg.w[Server::FDB], Server::FBK_GAR_ON);
     }
     else
     { // kontakt otvorene false
-        garage.setOpened(false);
-        television.setOpened(false);
-        BITMASK_SET(server.telegram.msg.w[Server::FDB], Server::FBK_GAR_ON);
+        garage->setOpened(false);
+        television->setOpened(false);
+        BITMASK_SET(server->telegram.msg.w[Server::FDB], Server::FBK_GAR_ON);
     }
     // nastavenie koncovych poloh garaze zatvorena poloha
     if (digitalRead(CLOSE_LIMIT_PIN) == HIGH)
     { // kontakt zatvorene true
-        garage.setClosed(true);
-        television.setClosed(true);
-        BITMASK_CLEAR(server.telegram.msg.w[Server::FDB], Server::FBK_GAR_OFF);
+        garage->setClosed(true);
+        television->setClosed(true);
+        BITMASK_CLEAR(server->telegram.msg.w[Server::FDB], Server::FBK_GAR_OFF);
     }
     else
     { // kontakt zatvorene false
-        garage.setClosed(false);
-        television.setClosed(false);
-        BITMASK_SET(server.telegram.msg.w[Server::FDB], Server::FBK_GAR_OFF);
+        garage->setClosed(false);
+        television->setClosed(false);
+        BITMASK_SET(server->telegram.msg.w[Server::FDB], Server::FBK_GAR_OFF);
     }
 }
 //--------------------------------------------------------------
@@ -131,69 +131,69 @@ void writeOutputs()
 {
     // nastavenie vystupov , relatok
     //************************************************************
-    bool onMoveToOpen = BITMASK_CHECK_ALL(server.telegram.msg.w[Server::STA], Server::STA_GAR_ON);
-    bool onMoveToClose = BITMASK_CHECK_ALL(server.telegram.msg.w[Server::STA], Server::STA_GAR_OFF);
+    bool onMoveToOpen = BITMASK_CHECK_ALL(server->telegram.msg.w[Server::STA], Server::STA_GAR_ON);
+    bool onMoveToClose = BITMASK_CHECK_ALL(server->telegram.msg.w[Server::STA], Server::STA_GAR_OFF);
     // ak je poziadavka zatvorit
     if (onMoveToClose)
     {
         // pohni garaz na zatvorenie
-        garage.doClose();
+        garage->doClose();
     }
     // ak je poziadavka zatvorit
     if (onMoveToOpen)
     {
         // pohni garaz na zatvorenie
-        garage.doOpen();
+        garage->doOpen();
     }
 
     //************************************************************
     // zapnutie svetiel
     // 12V zapnutie LED svetiel
     // ak sa ma svetlo zapnut
-    if (BITMASK_CHECK_ALL(server.telegram.msg.w[Server::STA], Server::STA_LIT_ON))
+    if (BITMASK_CHECK_ALL(server->telegram.msg.w[Server::STA], Server::STA_LIT_ON))
     {
-        light.doLightTurnOn();
-        television.setLight(true);
+        light->doLightTurnOn();
+        television->setLight(true);
     }
     // ak sa ma svetlo vypnut
-    if (BITMASK_CHECK_ALL(server.telegram.msg.w[Server::STA], Server::STA_LIT_OFF))
+    if (BITMASK_CHECK_ALL(server->telegram.msg.w[Server::STA], Server::STA_LIT_OFF))
     {
-        light.doLightTurnOff();
-        television.setLight(false);
+        light->doLightTurnOff();
+        television->setLight(false);
     }
     // ak sa ma svetlo zapnut automaticky
-    if (BITMASK_CHECK_ALL(server.telegram.msg.w[Server::STA], Server::STA_LIT_AUT))
+    if (BITMASK_CHECK_ALL(server->telegram.msg.w[Server::STA], Server::STA_LIT_AUT))
     {
         // vyhodnotit osvit
-        int i_val = (int)server.telegram.msg.w[Server::ATB];
+        int i_val = (int)server->telegram.msg.w[Server::ATB];
         if (i_val < ZAPNUTIE_SVETIEL_HRANICA)
         {
-            light.doLightTurnOn();
-            television.setLight(true);
+            light->doLightTurnOn();
+            television->setLight(true);
         }
         else
         {
-            light.doLightTurnOff();
-            television.setLight(false);
+            light->doLightTurnOff();
+            television->setLight(false);
         }
         // vyhodnotit zatvorenie zaclon od osvitu
         if (i_val < ZATVORENIE_ZACLON_HRANICA)
         {
-            louver.doLouverClose();
+            louver->doLouverClose();
         }
         else
         {
-            louver.doLouverOpen();
+            louver->doLouverOpen();
         }
     }
     // odlozit aktualny stav relatok do feedbacku
     if (digitalReadOutputPin(LIGHT_RELAY_PIN) == HIGH)
     {
-        BITMASK_CLEAR(server.telegram.msg.w[Server::FDB], Server::FBK_RELE_1);
+        BITMASK_CLEAR(server->telegram.msg.w[Server::FDB], Server::FBK_RELE_1);
     }
     else
     {
-        BITMASK_SET(server.telegram.msg.w[Server::FDB], Server::FBK_RELE_1);
+        BITMASK_SET(server->telegram.msg.w[Server::FDB], Server::FBK_RELE_1);
     }
 }
 //--------------------------------------------------------------
@@ -210,54 +210,54 @@ void urobitPrepocty()
     // ak je niektory priznak z povelu pre svetlo aktivny
 
     // ak sa ma svetlo zapnut
-    if (BITMASK_CHECK_ANY(server.telegram.msg.w[Server::CMD], Server::CMD_LIT_ON))
+    if (BITMASK_CHECK_ANY(server->telegram.msg.w[Server::CMD], Server::CMD_LIT_ON))
     {
-        BITMASK_CLEAR(server.telegram.msg.w[Server::STA], STA_MASK);
-        BITMASK_SET(server.telegram.msg.w[Server::STA], Server::STA_LIT_ON);
+        BITMASK_CLEAR(server->telegram.msg.w[Server::STA], STA_MASK);
+        BITMASK_SET(server->telegram.msg.w[Server::STA], Server::STA_LIT_ON);
     }
     // ak sa ma svetlo vypnut
-    if (BITMASK_CHECK_ANY(server.telegram.msg.w[Server::CMD], Server::CMD_LIT_OFF))
+    if (BITMASK_CHECK_ANY(server->telegram.msg.w[Server::CMD], Server::CMD_LIT_OFF))
     {
-        BITMASK_CLEAR(server.telegram.msg.w[Server::STA], STA_MASK);
-        BITMASK_SET(server.telegram.msg.w[Server::STA], Server::STA_LIT_OFF);
+        BITMASK_CLEAR(server->telegram.msg.w[Server::STA], STA_MASK);
+        BITMASK_SET(server->telegram.msg.w[Server::STA], Server::STA_LIT_OFF);
     }
     // ak sa ma svetlo zapnut automaticky
-    if (BITMASK_CHECK_ANY(server.telegram.msg.w[Server::CMD], Server::CMD_LIT_AUT))
+    if (BITMASK_CHECK_ANY(server->telegram.msg.w[Server::CMD], Server::CMD_LIT_AUT))
     {
-        BITMASK_CLEAR(server.telegram.msg.w[Server::STA], STA_MASK);
-        BITMASK_SET(server.telegram.msg.w[Server::STA], Server::STA_LIT_AUT);
+        BITMASK_CLEAR(server->telegram.msg.w[Server::STA], STA_MASK);
+        BITMASK_SET(server->telegram.msg.w[Server::STA], Server::STA_LIT_AUT);
     }
     // koniec poziadaviek pre svetlo
-    BITMASK_CLEAR(server.telegram.msg.w[Server::CMD], CMD_MASK);
+    BITMASK_CLEAR(server->telegram.msg.w[Server::CMD], CMD_MASK);
     //*******************************************
     // vyhodnotenie pohybu garaze
     CMD_MASK = Server::CMD_GAR_ON | Server::CMD_GAR_OFF | Server::CMD_GAR_STOP;
     STA_MASK = Server::STA_GAR_ON | Server::STA_GAR_OFF | Server::STA_GAR_STOP;
     // zisti ktorym smerom sa garaz hybe
-    bool statusOld = BITMASK_CHECK_ALL(server.telegram.msg.w[Server::STA], STA_MASK);
+    bool statusOld = BITMASK_CHECK_ALL(server->telegram.msg.w[Server::STA], STA_MASK);
     // ak chcem aby sa garaz otvorila
-    if (BITMASK_CHECK_ANY(server.telegram.msg.w[Server::CMD], Server::CMD_GAR_ON))
+    if (BITMASK_CHECK_ANY(server->telegram.msg.w[Server::CMD], Server::CMD_GAR_ON))
     {
         // nech sa zacne hybat k otvoreniu
-        BITMASK_CLEAR(server.telegram.msg.w[Server::STA], STA_MASK);
-        BITMASK_SET(server.telegram.msg.w[Server::STA], Server::STA_GAR_ON);
+        BITMASK_CLEAR(server->telegram.msg.w[Server::STA], STA_MASK);
+        BITMASK_SET(server->telegram.msg.w[Server::STA], Server::STA_GAR_ON);
     }
     // ak chcem aby sa garaz zatvorila
-    if (BITMASK_CHECK_ANY(server.telegram.msg.w[Server::CMD], Server::CMD_GAR_OFF))
+    if (BITMASK_CHECK_ANY(server->telegram.msg.w[Server::CMD], Server::CMD_GAR_OFF))
     {
         // nech sa zacne hybat k zatvoreniu
-        BITMASK_CLEAR(server.telegram.msg.w[Server::STA], STA_MASK);
-        BITMASK_SET(server.telegram.msg.w[Server::STA], Server::STA_GAR_OFF);
+        BITMASK_CLEAR(server->telegram.msg.w[Server::STA], STA_MASK);
+        BITMASK_SET(server->telegram.msg.w[Server::STA], Server::STA_GAR_OFF);
     }
     // ak chcem aby sa garaz zatvorila
-    if (BITMASK_CHECK_ANY(server.telegram.msg.w[Server::CMD], Server::CMD_GAR_STOP))
+    if (BITMASK_CHECK_ANY(server->telegram.msg.w[Server::CMD], Server::CMD_GAR_STOP))
     {
         // nech sa zastavi
-        BITMASK_CLEAR(server.telegram.msg.w[Server::STA], STA_MASK);
-        BITMASK_SET(server.telegram.msg.w[Server::STA], Server::STA_GAR_STOP);
+        BITMASK_CLEAR(server->telegram.msg.w[Server::STA], STA_MASK);
+        BITMASK_SET(server->telegram.msg.w[Server::STA], Server::STA_GAR_STOP);
     }
     // koniec poziadaviek pre garaz
-    BITMASK_CLEAR(server.telegram.msg.w[Server::CMD], CMD_MASK);
+    BITMASK_CLEAR(server->telegram.msg.w[Server::CMD], CMD_MASK);
     //*******************************************
 }
 
@@ -279,20 +279,36 @@ int digitalReadOutputPin(uint8_t pin)
 //--------------------------------------------------------------
 void setup()
 {
+    // zaluzie
+    louver = new Louver;
+    // garaz
+    garage = new Garage;
+    // svetlo
+    light = new Light;
+    // teplota
+    temp = new Temp;
+    //televizor
+    television = new Television;
+    //server
+    server = new Server;
+
+    //ovladanie svetla
+    light->setup();
+    light->doLightTurnOn();
     //************************************************************
     // nastavi displej
-    television.setup();
+    television->setup();
     //ovladanie svetla
-    light.setup();
+    light->setup();
     // nastavenie zaluzii
-    louver.setup(PWM_B_PIN, IN1_B_PIN, IN2_B_PIN);
-    louver.MaxSpeed = ZACLONY_SPEED;
-    louver.DelayTransfer = ZACLONY_DELAY_TO_TRANSFER;
+    louver->setup(PWM_B_PIN, IN1_B_PIN, IN2_B_PIN);
+    louver->MaxSpeed = ZACLONY_SPEED;
+    louver->DelayTransfer = ZACLONY_DELAY_TO_TRANSFER;
 
     // nastavenie garaze
-    garage.setup(PWM_A_PIN, IN1_A_PIN, IN2_A_PIN);
-    garage.MaxSpeedToOpen = GARAGE_SPEED_OPEN;
-    garage.MaxSpeedToClose = GARAGE_SPEED_CLOSE;
+    garage->setup(PWM_A_PIN, IN1_A_PIN, IN2_A_PIN);
+    garage->MaxSpeedToOpen = GARAGE_SPEED_OPEN;
+    garage->MaxSpeedToClose = GARAGE_SPEED_CLOSE;
 
     //************************************************************
     // nastavenie vstupov
@@ -302,7 +318,6 @@ void setup()
     // zahájení komunikace po sériové lince
     // rychlostí 115200 baud
     Serial.begin(115200);
-
 }
 //--------------------------------------------------------------
 // hlavna slucka programu
@@ -315,10 +330,10 @@ void loop()
     //************************************************************
     // zapametaj predosly stav periferii
     TELEGRAM last_msg;
-    memcpy(&last_msg, &server.telegram.msg, sizeof(server.telegram.msg));
+    memcpy(&last_msg, &server->telegram.msg, sizeof(server->telegram.msg));
     //************************************************************
     // nacitaj data zo serveru
-    server.doReadMessage();
+    server->doReadMessage();
     //************************************************************
     // nacitaj vstupy z Arduina
     readInputs();
@@ -327,15 +342,15 @@ void loop()
     urobitPrepocty();
     //************************************************************
     // zobrazit data na displej
-    television.drawScreen();
+    television->drawScreen();
     //************************************************************
     // aktualizovat vystupy Arduina
     writeOutputs();
     //************************************************************
     // odoslat data do serveru
-    server.doWriteMessage();
+    server->doWriteMessage();
     //************************************************************
-    server.telegram.msg.w[Server::CMD] = 0; // ziadne prikazy z nadradeneho servera
+    server->telegram.msg.w[Server::CMD] = 0; // ziadne prikazy z nadradeneho servera
     // pauza pred nasledujucim cyklom
     delay(LOOP_DELAY);
 }
