@@ -1,5 +1,5 @@
-#ifndef __EASY_CODE_HANDLER_H__
-#define __EASY_CODE_HANDLER_H__
+#ifndef __TELEGRAM_HANDLER_H__
+#define __TELEGRAM_HANDLER_H__
 
 #include <Arduino.h>
 
