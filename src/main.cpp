@@ -279,6 +279,9 @@ int digitalReadOutputPin(uint8_t pin)
 //--------------------------------------------------------------
 void setup()
 {
+    //************************************************************
+    // nastavi displej
+    television.setup();
     //ovladanie svetla
     light.setup();
     // nastavenie zaluzii
@@ -299,9 +302,7 @@ void setup()
     // zahájení komunikace po sériové lince
     // rychlostí 115200 baud
     Serial.begin(115200);
-    //************************************************************
-    // nastavi displej
-    television.setup();
+
 }
 //--------------------------------------------------------------
 // hlavna slucka programu
