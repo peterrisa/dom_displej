@@ -81,28 +81,29 @@ void readInputs()
     // Světelný senzor TEMT6000
     // vytvoření proměnných pro výsledky měření
     int osvit = light->doLightReadExposure();
-    television->setExposition(osvit);
-
     // přepočet analogové hodnoty z celého rozsahu
     //  0-1023 na procentuální rozsah 0-100
     int prepocet = map(osvit, 0, 1023, 0, 100);
+    television->setExposition(prepocet);
     // zapamataj vypocitany osvit
     server->telegram.msg.w[Server::ATB] = (word)prepocet;
     //************************************************************
     // TEPLOMER
     temp->doRead();
     float teplota = temp->getTemp();
-    television->setSetTemp((int)teplota);
+    television->setCurTemp((int)teplota);
     // zapamataj aktualnu teplotu
     server->telegram.msg.w[Server::ATM] = teplota;
     //************************************************************
     // nacitaj stav binarnych vstupov
     // nastavenie koncovych poloh garaze otvorena poloha
-    if (digitalRead(OPEN_LIMIT_PIN) == HIGH)
+    if (digitalRead(OPEN_LIMIT_PIN) == LOW)
     { // kontakt otvorene true
         garage->setOpened(true);
         television->setOpened(true);
         BITMASK_CLEAR(server->telegram.msg.w[Server::FDB], Server::FBK_GAR_ON);
+        //zastav povel na zapnutie otvarania
+        BITMASK_CLEAR(server->telegram.msg.w[Server::STA], Server::STA_GAR_ON);
     }
     else
     { // kontakt otvorene false
@@ -111,11 +112,13 @@ void readInputs()
         BITMASK_SET(server->telegram.msg.w[Server::FDB], Server::FBK_GAR_ON);
     }
     // nastavenie koncovych poloh garaze zatvorena poloha
-    if (digitalRead(CLOSE_LIMIT_PIN) == HIGH)
+    if (digitalRead(CLOSE_LIMIT_PIN) == LOW)
     { // kontakt zatvorene true
         garage->setClosed(true);
         television->setClosed(true);
         BITMASK_CLEAR(server->telegram.msg.w[Server::FDB], Server::FBK_GAR_OFF);
+        //zastav povel na zapnutie zatvarania
+        BITMASK_CLEAR(server->telegram.msg.w[Server::STA], Server::STA_GAR_OFF);
     }
     else
     { // kontakt zatvorene false
@@ -131,6 +134,7 @@ void writeOutputs()
 {
     // nastavenie vystupov , relatok
     //************************************************************
+   
     bool onMoveToOpen = BITMASK_CHECK_ALL(server->telegram.msg.w[Server::STA], Server::STA_GAR_ON);
     bool onMoveToClose = BITMASK_CHECK_ALL(server->telegram.msg.w[Server::STA], Server::STA_GAR_OFF);
     // ak je poziadavka zatvorit

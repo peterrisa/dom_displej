@@ -75,6 +75,7 @@ const int GARAGE_SPEED_OPEN = 255;
 class Garage
 {
 public:
+    Garage(){ _isOpening = _isClosing = _openLimit = _closeLimit = false; };
     //setup garage
     void setup(int en, int in1, int in2);
     //zastav garaz
@@ -122,6 +123,7 @@ const int LIGHT_RELAY_PIN = 53;//51
 class Light
 {
 public:
+    Light(){ _isLightOn = _isAutomat = false; _osvit = 0;};
     void setup();
     //zapne svetlo
     void doLightTurnOn();
@@ -141,11 +143,11 @@ public:
 
 private:
     // svetlo zapnute > true, vypnute > false
-    bool _isLightOn = false;
+    bool _isLightOn;
     // automat je zapnuty > true, vypnuty > false
-    bool _isAutomat = false;
+    bool _isAutomat;
     //osvit nacitany z cidla
-    int _osvit = 0;
+    int _osvit;
 };
 
 //server
