@@ -154,7 +154,13 @@ public:
     void doRead();
     float getTemp() { return _teplota[0]; }
 
+    //nastav teplotu
+    void setSetTemp(int temp){_setTemp = temp;}
+    int getSetTemp(){return _setTemp;}
+
 private:
+    //teplota
+    int _setTemp;
     // vytvoření instance oneWireDS z knihovny OneWire
     OneWire _oneWireDS; // teplomery sú na pine 14
     // vytvoření instance senzoryDS z knihovny DallasTemperature

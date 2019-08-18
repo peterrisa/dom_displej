@@ -69,14 +69,8 @@ void Server::doReadMessage()
             //  Serial.println("arduino rx is valid\n");
             // prekopiruj cmd - prikazy zo servera pre Arduino
             telegram.msg.w[Server::CMD] = new_msg.msg.w[Server::CMD];
-            //*******************************************
-            // vyhodnotenie nastavenia teploty
-            // ak sa ma svetlo zapnut
-            if (BITMASK_CHECK_ALL(telegram.msg.w[Server::CMD], Server::CMD_TEM_SET))
-            {
-                // prekopiruj hodnotu setpointu
-                telegram.msg.w[Server::STM] = new_msg.msg.w[Server::STM];
-            }
+            // prekopiruj hodnotu setpointu
+            telegram.msg.w[Server::STM] = new_msg.msg.w[Server::STM];
         }
     }
 }

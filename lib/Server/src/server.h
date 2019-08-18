@@ -66,6 +66,8 @@ public:
         // povel nastavenie teploty
         CMD_TEM_SET = 0x0040,
   // konstanty pre kodovanie stavov
+        //ziadny stav
+        STA_NONE = 0x0000,
         // chcem aby sa garaz otvorila
         STA_GAR_ON = 0x0001,
         // chcem aby sa garaz zatvorila

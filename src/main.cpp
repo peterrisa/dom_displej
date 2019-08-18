@@ -81,7 +81,7 @@ void readInputs()
     { // kontakt otvorene true
         garage->setOpened(true);
         television->setOpened(true);
-        server->setBit(Server::FDB,Server::FBK_GAR_ON,false);
+        server->setBit(Server::FDB,Server::FBK_GAR_ON,true);
         //zastav povel na zapnutie otvarania
         server->setBit(Server::STA,Server::STA_GAR_ON,false);
     }
@@ -89,14 +89,14 @@ void readInputs()
     { // kontakt otvorene false
         garage->setOpened(false);
         television->setOpened(false);
-        server->setBit(Server::FDB,Server::FBK_GAR_ON,true);
+        server->setBit(Server::FDB,Server::FBK_GAR_ON,false);
     }
     // nastavenie koncovych poloh garaze zatvorena poloha
     if (digitalRead(CLOSE_LIMIT_PIN) == LOW)
     { // kontakt zatvorene true
         garage->setClosed(true);
         television->setClosed(true);
-        server->setBit(Server::FDB,Server::FBK_GAR_OFF,false);
+        server->setBit(Server::FDB,Server::FBK_GAR_OFF,true);
         //zastav povel na zapnutie zatvarania
         server->setBit(Server::STA,Server::STA_GAR_OFF,false);
     }
@@ -104,7 +104,7 @@ void readInputs()
     { // kontakt zatvorene false
         garage->setClosed(false);
         television->setClosed(false);
-        server->setBit(Server::FDB,Server::FBK_GAR_OFF,true);
+        server->setBit(Server::FDB,Server::FBK_GAR_OFF,false);
     }
 }
 //--------------------------------------------------------------
@@ -124,22 +124,13 @@ void writeOutputs()
         // pohni garaz na otvorenie
         garage->doOpen();
     }
+    bool GarageMotorRuning =  garage->isClosing() | garage->isOpening();
+    server->setBit(Server::FDB,Server::FBK_GAR_STOP,GarageMotorRuning);
 
-    // ak sa ma svetlo zapnut
-    if (server->getBit(Server::STA, Server::STA_LIT_ON))
-    {
-        light->doLightTurnOn();
-        television->setLight(true);
-    }
-    // ak sa ma svetlo vypnut
-    if (server->getBit(Server::STA, Server::STA_LIT_OFF))
-    {
-        light->doLightTurnOff();
-        television->setLight(false);
-    }
     // ak sa ma svetlo zapnut automaticky
     if (server->getBit(Server::STA, Server::STA_LIT_AUT))
     {
+        light->doLightStartAutomat();
         // vyhodnotit osvit
         int i_val = (int)server->getWord(Server::ATB);
         if (i_val < ZAPNUTIE_SVETIEL_HRANICA)
@@ -162,76 +153,27 @@ void writeOutputs()
             louver->doLouverOpen();
         }
     }
- // odlozit aktualny stav relatok do feedbacku
-    server->setBit(Server::FDB,Server::FBK_RELE_1,light->isLightOn());
-}
-//--------------------------------------------------------------
-// vyhodnot prikazy a vykonaj vypocty
-//--------------------------------------------------------------
-void urobitPrepocty()
-{
-    // ak sa nieco ma zmenit so svetlom
-    // vyhodnotit prikazy zo servera
-    //*******************************************
-    // vyhodnotenie svetla
-    word CMD_MASK = Server::CMD_LIT_ON | Server::CMD_LIT_OFF | Server::CMD_LIT_AUT;
-    word STA_MASK = Server::STA_LIT_ON | Server::STA_LIT_OFF | Server::STA_LIT_AUT;
-    word CMD = server->getWord(Server::CMD);
-    word STA = server->getWord(Server::STA);
-    // ak je niektory priznak z povelu pre svetlo aktivny
 
     // ak sa ma svetlo zapnut
-    if (server->getBit(Server::CMD, Server::CMD_LIT_ON))
+    if (server->getBit(Server::STA, Server::STA_LIT_ON))
     {
-        server->setWord(Server::STA,STA & !STA_MASK);
-        server->setBit(Server::STA,Server::STA_LIT_ON, true);
+        light->doLightTurnOn();
+        light->doLightStopAutomat();
+        television->setLight(true);
     }
     // ak sa ma svetlo vypnut
-    if (server->getBit(Server::CMD, Server::CMD_LIT_OFF))
+    if (server->getBit(Server::STA, Server::STA_LIT_OFF))
     {
-        server->setWord(Server::STA,STA & !STA_MASK);
-        server->setBit(Server::STA,Server::STA_LIT_OFF, true);
+        light->doLightTurnOff();
+        light->doLightStopAutomat();
+        television->setLight(false);
     }
-    // ak sa ma svetlo zapnut automaticky
-    if (server->getBit(Server::CMD, Server::CMD_LIT_AUT))
-    {
-        server->setWord(Server::STA,STA & !STA_MASK);
-        server->setBit(Server::STA,Server::STA_LIT_AUT, true);
-    }
-    // koniec poziadaviek pre svetlo
-    server->setWord(Server::CMD,CMD & !CMD_MASK);
-    //*******************************************
-    // vyhodnotenie pohybu garaze
-    CMD_MASK = Server::CMD_GAR_ON | Server::CMD_GAR_OFF | Server::CMD_GAR_STOP;
-    STA_MASK = Server::STA_GAR_ON | Server::STA_GAR_OFF | Server::STA_GAR_STOP;
-    CMD = server->getWord(Server::CMD);
-    STA = server->getWord(Server::STA);    
-    // zisti ktorym smerom sa garaz hybe
-//    bool statusOld = BITMASK_CHECK_ALL(server->telegram.msg.w[Server::STA], STA_MASK);
-    // ak chcem aby sa garaz otvorila
-    if (server->getBit(Server::CMD, Server::CMD_GAR_ON))
-    {
-        // nech sa zacne hybat k otvoreniu
-        server->setWord(Server::STA,STA & !STA_MASK);
-        server->setBit(Server::STA,Server::STA_GAR_ON, true);
-    }
-    // ak chcem aby sa garaz zatvorila
-    if (server->getBit(Server::CMD, Server::CMD_GAR_OFF))
-    {
-        // nech sa zacne hybat k zatvoreniu
-        server->setWord(Server::STA,STA & !STA_MASK);
-        server->setBit(Server::STA,Server::STA_GAR_OFF, true);
-    }
-    // ak chcem aby sa garaz zatvorila
-    if (server->getBit(Server::CMD, Server::CMD_GAR_STOP))
-    {
-        // nech sa zastavi
-        server->setWord(Server::STA,STA & !STA_MASK);
-        server->setBit(Server::STA,Server::STA_GAR_STOP, true);
-    }
-    // koniec poziadaviek pre garaz
-    server->setWord(Server::CMD,CMD & !CMD_MASK);
-    //*******************************************
+    
+ // odlozit aktualny stav relatok do feedbacku
+    server->setBit(Server::FDB,Server::FBK_LIT_ON,light->isLightOn());
+    server->setBit(Server::FDB,Server::FBK_LIT_OFF,!light->isLightOn());
+    server->setBit(Server::FDB,Server::FBK_LIT_AUT,light->isAutomat());
+    server->setBit(Server::FDB,Server::FBK_RELE_1,light->isLightOn());
 }
 
 //--------------------------------------------------------------
@@ -265,9 +207,6 @@ void setup()
     //server
     server = new Server;
 
-    //ovladanie svetla
-    light->setup();
-    light->doLightTurnOn();
     //************************************************************
     // nastavi displej
     television->setup();
@@ -300,10 +239,9 @@ const int LOOP_DELAY = 100;
 
 void loop()
 {
-    //************************************************************
-    // zapametaj predosly stav periferii
-  //  TELEGRAM last_msg;
-  //  memcpy(&last_msg, &server->telegram.msg, sizeof(server->telegram.msg));
+    //cakaj na dalsie povely zo servera
+    server->setWord(Server::CMD, Server::CMD_NONE);
+    server->setWord(Server::STA, Server::STA_NONE);
     //************************************************************
     // nacitaj data zo serveru
     server->doReadMessage();
@@ -311,8 +249,41 @@ void loop()
     // nacitaj vstupy z Arduina
     readInputs();
     //************************************************************
-    // vyhodnot prikazy a vykonaj vypocty
-//    urobitPrepocty();
+    //vykonaj povely od nadradeneho servera
+
+    // povel nastavenie teploty
+    int setTemp = temp->getSetTemp();
+    if(server->getBit(Server::CMD,Server::CMD_TEM_SET)){
+        setTemp = server->getWord(Server::STM);
+        temp->setSetTemp(setTemp);
+    };
+    television->setSetTemp( setTemp);
+    server->setWord(Server::STM,setTemp);
+
+    //povely pre svetlo
+    if(server->getBit(Server::CMD,Server::CMD_LIT_ON)){
+        server->setBit(Server::STA,Server::STA_LIT_ON, true);
+    };
+    if(server->getBit(Server::CMD,Server::CMD_LIT_OFF)){
+        server->setBit(Server::STA,Server::STA_LIT_OFF, true);
+    };
+    if(server->getBit(Server::CMD,Server::CMD_LIT_AUT)){
+        server->setBit(Server::STA,Server::STA_LIT_AUT, true);
+        server->setBit(Server::STA,Server::STA_LIT_ON, false);
+        server->setBit(Server::STA,Server::STA_LIT_OFF, false);
+    }
+        
+    //povely pre garaz
+    if(server->getBit(Server::CMD,Server::CMD_GAR_ON)){
+        server->setBit(Server::STA,Server::STA_GAR_ON, true);
+    };
+    if(server->getBit(Server::CMD,Server::CMD_GAR_OFF)){
+        server->setBit(Server::STA,Server::STA_GAR_OFF, true);
+    };
+    if(server->getBit(Server::CMD,Server::CMD_GAR_STOP)){
+        server->setBit(Server::STA,Server::STA_GAR_STOP, true);
+    };        
+
     //************************************************************
     // zobrazit data na displej
     television->drawScreen();
@@ -323,9 +294,7 @@ void loop()
     // odoslat data do serveru
     server->doWriteMessage();
     //************************************************************
-    //cakaj na dalsie povely zo servera
-    server->setWord(Server::CMD, Server::CMD_NONE);
-
+ 
     // pauza pred nasledujucim cyklom
     delay(LOOP_DELAY);
 }

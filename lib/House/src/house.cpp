@@ -134,6 +134,7 @@ int Light::doLightReadExposure()
 //teplotne cidla
 Temp::Temp()
 {
+    setSetTemp(25);
     // začni komunikovať s teplomermi
     _oneWireDS.begin(TEMP_INPUT_PIN);
     _senzoryDS.setOneWire(&_oneWireDS);
