@@ -1,20 +1,5 @@
 #pragma once
 
-/* a=target variable, b=bit number to act upon 0-n */
-#define BIT_SET(a, b) ((a) |= (1ULL << (b)))
-#define BIT_CLEAR(a, b) ((a) &= ~(1ULL << (b)))
-#define BIT_FLIP(a, b) ((a) ^= (1ULL << (b)))
-// '!!' to make sure this returns 0 or 1
-#define BIT_CHECK(a, b) (!!((a) & (1ULL << (b))))
-
-/* x=target variable, y=mask */
-#define BITMASK_SET(x, y) ((x) |= (y))
-#define BITMASK_CLEAR(x, y) ((x) &= (~(y)))
-#define BITMASK_FLIP(x, y) ((x) ^= (y))
-// warning: evaluates y twice
-#define BITMASK_CHECK_ALL(x, y) (((x) & (y)) == (y))
-#define BITMASK_CHECK_ANY(x, y) ((x) & (y))
-
 #include <Arduino.h>
 
 //teplotne cidla cez onewire
@@ -23,9 +8,6 @@
 
 //ovladanie motorov
 #include <motolib.h>
-
-//komunikacia so serverom
-#include <telegram.h>
 
 //zaluzie
 //motor zaclony B
@@ -44,6 +26,8 @@ public:
     void doLouverOpen();
     //ovladanie zaluzii zatiahnut
     void doLouverClose();
+    //vrat ci je zaluzia otvorena
+    bool isOpened() { return louverPosition; }
 
 private:
     // pomocná premenná pre definovanie polohy záclom true = otvorené, false = zatvorené
@@ -75,7 +59,7 @@ const int GARAGE_SPEED_OPEN = 255;
 class Garage
 {
 public:
-    Garage(){ _isOpening = _isClosing = _openLimit = _closeLimit = false; };
+    Garage() { _isOpening = _isClosing = _openLimit = _closeLimit = false; }
     //setup garage
     void setup(int en, int in1, int in2);
     //zastav garaz
@@ -85,9 +69,13 @@ public:
     //zatvor garaz
     void doClose();
     //vrat ci sa otvara
-    bool isOpening() { return _isOpening; };
+    bool isOpening() { return _isOpening; }
     //vrat ci sa zatvara
-    bool isClosing() { return _isClosing; };
+    bool isClosing() { return _isClosing; }
+    //vrat ci je otvoreny
+    bool isOpened() { return _openLimit; }
+    //vrat ci je zatvoreny
+    bool isClosed() { return _closeLimit; }
     //nastav limit open
     void setOpened(bool);
     //nastav limit close
@@ -117,13 +105,17 @@ public:
 const int ZAPNUTIE_SVETIEL_HRANICA = 20;
 const int ZATVORENIE_ZACLON_HRANICA = 50;
 const int LIGHT_SENSOR_PIN = A6;
-const int LIGHT_RELAY_PIN = 53;//51
+const int LIGHT_RELAY_PIN = 53; //51
 // konstanty pre relatka
 
 class Light
 {
 public:
-    Light(){ _isLightOn = _isAutomat = false; _osvit = 0;};
+    Light()
+    {
+        _isLightOn = _isAutomat = false;
+        _osvit = 0;
+    };
     void setup();
     //zapne svetlo
     void doLightTurnOn();
@@ -136,10 +128,9 @@ public:
     //zisti osvit
     int doLightReadExposure();
     //aky je osvit
-    int doLightGetExposure()
-    {
-        return _osvit;
-    };
+    int doLightGetExposure() { return _osvit; }
+    bool isLightOn() { return _isLightOn; }
+    bool isAutomat() { return _isAutomat; }
 
 private:
     // svetlo zapnute > true, vypnute > false
@@ -148,101 +139,6 @@ private:
     bool _isAutomat;
     //osvit nacitany z cidla
     int _osvit;
-};
-
-//server
-class Server
-{
-public:
-    enum CMD
-    { // konstanty pre kodovanie povelu pre Arduino
-        // povel garaz otvorit
-        CMD_GAR_ON = 0x0001,
-        // povel garaz zatvorit
-        CMD_GAR_OFF = 0x0002,
-        // povel garaz zatvorit
-        CMD_GAR_STOP = 0x0004,
-        // povel svetlo zapnut
-        CMD_LIT_ON = 0x0008,
-        // povel svetlo vypnut
-        CMD_LIT_OFF = 0x0010,
-        // povel svetlo automat
-        CMD_LIT_AUT = 0x0020,
-        // povel nastavenie teploty
-        CMD_TEM_SET = 0x0040
-    };
-    enum STA
-    { // konstanty pre kodovanie stavov
-        // chcem aby sa garaz otvorila
-        STA_GAR_ON = 0x0001,
-        // chcem aby sa garaz zatvorila
-        STA_GAR_OFF = 0x0002,
-        // chcem aby sa garaz zastavila
-        STA_GAR_STOP = 0x0004,
-        // stav chcem mat zapnute svetlo
-        STA_LIT_ON = 0x0008,
-        // stav chce mat vypnute svetlo
-        STA_LIT_OFF = 0x0010,
-        // stav chcem mat automaticke svetlo
-        STA_LIT_AUT = 0x0020
-    };
-    enum FBK
-    { // konstanty pre kodovanie feedbacku od arduina
-        // stav garaz otvorena
-        FBK_GAR_ON = 0x0001,
-        // stav garaz zatvorena
-        FBK_GAR_OFF = 0x0002,
-        // stav garaz zastavena
-        FBK_GAR_STOP = 0x0004,
-        // stav zapnutie svetla
-        FBK_LIT_ON = 0x0008,
-        // stav vypnutie svetla
-        FBK_LIT_OFF = 0x0010,
-        // stav svetlo v automate
-        FBK_LIT_AUT = 0x0020,
-        // stav kurenie zapnute
-        FBK_HEAT_ON = 0x0080,
-        // stav chladenie zapnute
-        FBK_COOL_ON = 0x0100,
-        // stav ochrana zapnuta
-        FBK_SAFE_ON = 0x0200,
-        // stav rele_0
-        FBK_RELE_0 = 0x0400,
-        // stav rele_1
-        FBK_RELE_1 = 0x0800,
-        // stav rele_2
-        FBK_RELE_2 = 0x1000,
-        // stav rele_3
-        FBK_RELE_3 = 0x2000,
-        // stav rele_4
-        FBK_RELE_4 = 0x4000,
-        // stav rele_5
-        FBK_RELE_5 = 0x8000
-    };
-    enum Words
-    {
-        // word setpoint teplota
-        STM = 0,
-        // word actual teplota
-        ATM = 1,
-        // word actual osvitu
-        ATB = 2,
-        // status word
-        STA = 7,
-        // feedback word
-        FDB = 8,
-        // command word
-        CMD = 9
-    };
-    Server();
-    // odosli data do serveru
-    void doWriteMessage();
-    // nacitaj data zo serveru
-    void doReadMessage();
-
-public:
-    // komunikacia
-    Telegram telegram;
 };
 
 //teplomer

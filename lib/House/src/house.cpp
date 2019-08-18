@@ -131,61 +131,6 @@ int Light::doLightReadExposure()
     return doLightGetExposure();
 }
 
-//komunikacia so serverom
-Server::Server()
-{
-    //************************************************************
-    // commandy
-    telegram.msg.w[STM] = 25; // ziadne prikazy z nadradeneho servera
-    telegram.msg.w[CMD] = 0;  // ziadne prikazy z nadradeneho servera
-}
-//--------------------------------------------------------------
-// odoslat data do serveru
-//--------------------------------------------------------------
-void Server::doWriteMessage()
-{
-    // zakoduj spravu pre server
-    telegram.encodeTelegram();
-    // odosli data po seriovej linke
-    Serial.println((char *)telegram.getBuffer());
-}
-//--------------------------------------------------------------
-// nacitaj data zo serveru
-//--------------------------------------------------------------
-void Server::doReadMessage()
-{
-    Telegram new_msg;
-    // ak su prijate data zo servera, nacita ich
-    if (Serial.available() >= Telegram::BUF_LEN)
-    {
-        for (int i = 0; i < Telegram::BUF_LEN; i++)
-        {
-            byte c = Serial.read();
-            new_msg.setByteInBuffer(i, c);
-        }
-        while (Serial.available())
-            Serial.read();
-
-        // dekoduj spravu od servera
-        new_msg.decodeTelegram();
-        // ak je sprava validna
-        if (new_msg.isValidTelegram())
-        {
-            //  Serial.println("arduino rx is valid\n");
-            // prekopiruj cmd - prikazy zo servera pre Arduino
-            telegram.msg.w[Server::CMD] = new_msg.msg.w[Server::CMD];
-            //*******************************************
-            // vyhodnotenie nastavenia teploty
-            // ak sa ma svetlo zapnut
-            if (BITMASK_CHECK_ALL(telegram.msg.w[Server::CMD], Server::CMD_TEM_SET))
-            {
-                // prekopiruj hodnotu setpointu
-                telegram.msg.w[Server::STM] = new_msg.msg.w[Server::STM];
-            }
-        }
-    }
-}
-
 //teplotne cidla
 Temp::Temp()
 {
