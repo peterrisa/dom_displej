@@ -128,7 +128,7 @@ void writeOutputs()
     server->setBit(Server::FDB,Server::FBK_GAR_STOP,GarageMotorRuning);
 
     // ak sa ma svetlo zapnut automaticky
-    if (server->getBit(Server::STA, Server::STA_LIT_AUT))
+    if (server->getBit(Server::STA, Server::STA_LIT_AUT) || light->isAutomat())
     {
         light->doLightStartAutomat();
         // vyhodnotit osvit
