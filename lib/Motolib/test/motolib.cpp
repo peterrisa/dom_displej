@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include "motolib.h"
 //-----------------------------------------------------------
-// prekontroluje ci je telegram validny
-// vrati true ak je validny, false ak nevalidny
+// prekontroluje či je telegram validný
+// vrati |true| ak je validny, |false| ak nevalidny
 bool isValidTelegram(const TELEGRAM *msg) {
   if (msg->stx != STX)
     return false;
@@ -11,11 +11,11 @@ bool isValidTelegram(const TELEGRAM *msg) {
   return true;
 }
 
-// prekonvertuje telegram do char retazca ukonceneho '\x00'
-// buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
-// buffer - pole znakov kam sa bude konvertovat
-// msg - struktura telegramu
-// len - velkost struktury telegramu v bajtoch; sizeof(TELEGRAM)
+//prekonvertuje telegram do char retazca ukonceneho '\x00'
+//buffer musi mať veľkosť 2*sizeof(TELEGRAM) + 1 bajtov
+//buffer - pole znakov kam sa bude konvertovať
+//msg - štruktúra telegramu
+//len - velkosť štruktúry telegramu v bajtoch; sizeof(TELEGRAM)
 void encodeTelegram(byte *buffer, const TELEGRAM *msg, const int len) {
   byte *b_msg = (byte *)msg;
   byte *buf = buffer;
@@ -30,11 +30,11 @@ void encodeTelegram(byte *buffer, const TELEGRAM *msg, const int len) {
   *buf = '\x00';
 }
 
-// prekonvertuje char retazec ukonceny '\x00' na telegram
-// buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
-// buffer - pole znakov odkial sa bude konvertovat
-// msg - struktura telegramu
-// len - velkost struktury telegramu v bajtoch; int len = sizeof(TELEGRAM);
+//prekonvertuje char retazec ukončený '\x00' na telegram
+//buffer musi mat veľkosť 2*sizeof(TELEGRAM) + 1 bajtov
+//buffer - pole znakov odkiaľ sa bude konvertovať
+//msg - štrúktura telegramu
+//len - veľkosť štruktúry telegramu v bajtoch; int len = sizeof(TELEGRAM);
 void decodeTelegram(TELEGRAM *msg, const int len, const byte *buffer) {
   byte *b_msg = (byte *)msg;
   byte *buf = buffer;
@@ -107,7 +107,7 @@ void test() {
 }
 
 void setup() {
-  Serial.begin(115200); // opens serial port
+  Serial.begin(115200); // otvorí serial port
   test();
 }
 

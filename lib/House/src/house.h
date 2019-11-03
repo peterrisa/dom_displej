@@ -2,15 +2,15 @@
 
 #include <Arduino.h>
 
-//teplotne cidla cez onewire
+//teplotné čidlá cez onewire
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-//ovladanie motorov
+//ovládanie motorov
 #include <motolib.h>
 
-//zaluzie
-//motor zaclony B
+//žalúzie
+//motor záclony B
 const int PWM_B_PIN = 44;
 const int IN1_B_PIN = 38;
 const int IN2_B_PIN = 36;
@@ -20,93 +20,95 @@ const int ZACLONY_DELAY_TO_TRANSFER = 1000;
 class Louver
 {
 public:
-    //setup louver
+    //setup louver(záclony)
     void setup(int en, int in1, int in2);
-    //ovladanie zaluzii odtiahnut
+    //ovládanie žalúzií - odtiahnuť
     void doLouverOpen();
-    //ovladanie zaluzii zatiahnut
+    //ovládanie žalúzií - zatiahnuť
     void doLouverClose();
-    //vrat ci je zaluzia otvorena
+    //vrať či je žalúzia otvorená
     bool isOpened() { return louverPosition; }
 
 private:
-    // pomocná premenná pre definovanie polohy záclom true = otvorené, false = zatvorené
+    // pomocná premenná pre definovanie polohy záclon |true = otvorené|, |false = zatvorené|
     bool louverPosition = false;
-    // motor zaluzii
+    // motor žalúziǐ
     LM298N_bridge motor;
 
 public:
-    // speed to open
+    // rýchlosť otvárania
     unsigned char MaxSpeed = 50;
-    // delay transfer
+    // oneskorenie prenosu (delay transfer)
     int DelayTransfer = 1000;
 };
 
-// garaz
+//---Garíž---
 
 // kontakty pre vstupy
 const int OPEN_LIMIT_PIN = 15;
 const int CLOSE_LIMIT_PIN = 16;
 
 //nastavenie pinov pre motory
-//motor garaze A
+//motor garáže A
 const int PWM_A_PIN = 46;
 const int IN1_A_PIN = 42;
 const int IN2_A_PIN = 40;
+//rýchlosť zatvárania garáže
 const int GARAGE_SPEED_CLOSE = 225;
+//rýchlosť otvárania garáže
 const int GARAGE_SPEED_OPEN = 255;
 
 class Garage
 {
 public:
     Garage() { _isOpening = _isClosing = _openLimit = _closeLimit = false; }
-    //setup garage
+    //setup garáže
     void setup(int en, int in1, int in2);
-    //zastav garaz
+    //zastav garáž
     void doStop();
-    //otvor garaz
+    //otvor garáž
     void doOpen();
-    //zatvor garaz
+    //zatvor garáž
     void doClose();
-    //vrat ci sa otvara
+    //skontroluj, či sa otvára
     bool isOpening() { return _isOpening; }
-    //vrat ci sa zatvara
+    //vrať či sa zatvra
     bool isClosing() { return _isClosing; }
-    //vrat ci je otvoreny
+    //skontroluj či je otvorený
     bool isOpened() { return _openLimit; }
-    //vrat ci je zatvoreny
+    //vrať či je zatvorený
     bool isClosed() { return _closeLimit; }
-    //nastav limit open
+    //nastav limit |open|
     void setOpened(bool);
-    //nastav limit close
+    //nastav limit |close|
     void setClosed(bool);
 
 private:
-    // motor garazovych dveri
+    // motor garážových dverí
     LM298N_bridge motor;
-    //otvara sa, motor bezi
+    //otvára sa, motor bezi
     bool _isOpening;
-    //zatvara sa, motor bezi
+    //zatvýra sa, motor bezi
     bool _isClosing;
-    // je otvoreny, ma koncak
+    //je otvorený, dosiahol koncovú polohu
     bool _openLimit;
-    // je zatvoreny, ma koncak
+    //je zatvorený, dosiahol koncovú polohu
     bool _closeLimit;
 
 public:
-    // speed to open
+    //speed to open
     unsigned char MaxSpeedToOpen = 50;
     // speed to close
     unsigned char MaxSpeedToClose = 50;
 };
 
-//svetlo
-//automaticke zapinania od osvitu
+//---Svetlo---
+//automatické zapínania od stavu okolitého jasu
 const int ZAPNUTIE_SVETIEL_HRANICA = 20;
 const int ZATVORENIE_ZACLON_HRANICA = 50;
 const int LIGHT_SENSOR_PIN = A6;
 const int LIGHT_RELAY_PIN = 53; //51
-// konstanty pre relatka
+// konštanty pre relátka
 
 class Light
 {
@@ -125,24 +127,24 @@ public:
     void doLightStartAutomat();
     //vypne automat
     void doLightStopAutomat();
-    //zisti osvit
+    //zisti okolitý jas
     int doLightReadExposure();
-    //aky je osvit
+    //aky je okolitý jas
     int doLightGetExposure() { return _osvit; }
     bool isLightOn() { return _isLightOn; }
     bool isAutomat() { return _isAutomat; }
 
 private:
-    // svetlo zapnute > true, vypnute > false
+    // svetlo |zapnute > true|, |vypnute > false|
     bool _isLightOn;
-    // automat je zapnuty > true, vypnuty > false
+    // automat je |zapnuty > true|, |vypnuty > false|
     bool _isAutomat;
-    //osvit nacitany z cidla
+    //osvit nacitany z čidla
     int _osvit;
 };
 
 //teplomer
-// maximalny pocet teplomerov DS1820 na pine
+// maximálny počet teplomerov DS1820 na pine
 const int MAX_DS1820_SENSORS = 5;
 //one wire pin
 const uint8_t TEMP_INPUT_PIN = 14;
@@ -161,11 +163,11 @@ public:
 private:
     //teplota
     int _setTemp;
-    // vytvoření instance oneWireDS z knihovny OneWire
+    // vytvoeenie instance oneWireDS z knihovny OneWire
     OneWire _oneWireDS; // teplomery sú na pine 14
-    // vytvoření instance senzoryDS z knihovny DallasTemperature
+    // vytvořenie instance senzoryDS z knihovny DallasTemperature
     DallasTemperature _senzoryDS;
-    int _num_temp = 0; // pocet teplomerov pripojenych
+    int _num_temp = 0; // počet teplomerov pripojených
     byte _addr[MAX_DS1820_SENSORS][8];
     char _buf[20];
     // koľko môže byť DS18S20 teplomerov pripojených

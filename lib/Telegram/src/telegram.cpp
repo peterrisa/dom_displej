@@ -4,30 +4,30 @@
 // kniznica TELEGRAM
 //--------------------------------------------------------------
 Telegram::Telegram() {
-  // iniciovat datove objekty
+  //iniciovat datove objekty
   memset((byte *)this->getTelegram(), 0, Telegram::MSG_LEN);
   memset((byte *)this->getBuffer(), 0, Telegram::BUF_LEN);
-  // preset telegram header
+  //preset telegram header
   setByteInTelegram(Telegram::START, Telegram::STX);
-  // preset telegram footer
+  //preset telegram footer
   setByteInTelegram(Telegram::STOP, Telegram::ETX);
 }
-// prekonvertuje ascii string do bufferu
+//prekonvertuje ascii string do bufferu
 void Telegram::setBuffer(char *str) {
   strncpy((char *)this->getBuffer(), str, Telegram::BUF_LEN);
 }
-// prekonvertuje ascii string do telegramu
+//prekonvertuje ascii string do telegramu
 void Telegram::setTelegram(char *str) {
   strncpy((char *)this->getTelegram(), str, Telegram::MSG_LEN);
 }
-// nastavi Uint8 hodnotu v poli TELEGRAM
+//nastavi Uint8 hodnotu v poli TELEGRAM
 void Telegram::setByteInTelegram(int num, byte val) {
   if ((num >= 0) && (num < Telegram::MSG_LEN)) {
     byte *uint8 = (byte *)this->getTelegram();
     uint8[num] = val;
   }
 }
-// vrati Uint8 hodnotu v poli Telegram
+//vrati Uint8 hodnotu v poli Telegram
 byte Telegram::getByteInTelegram(int num) {
   if ((num >= 0) && (num < Telegram::MSG_LEN)) {
     byte *uint8 = (byte *)this->getTelegram();
@@ -35,14 +35,14 @@ byte Telegram::getByteInTelegram(int num) {
   }
   return 0;
 }
-// nastavi Uint8 hodnotu v poli buffer
+//nastavi Uint8 hodnotu v poli buffer
 void Telegram::setByteInBuffer(int num, byte val) {
   if ((num >= 0) && (num < Telegram::BUF_LEN)) {
     byte *uint8 = (byte *)this->getBuffer();
     uint8[num] = val;
   }
 }
-// vrati Uint8 hodnotu v poli Buffer
+//vrati Uint8 hodnotu v poli Buffer
 byte Telegram::getByteInBuffer(int num) {
   if ((num >= 0) && (num < Telegram::BUF_LEN)) {
     byte *uint8 = (byte *)this->getBuffer();
@@ -51,8 +51,8 @@ byte Telegram::getByteInBuffer(int num) {
   return 0;
 }
 //--------------------------------------------------------------
-// prekontroluje ci je telegram validny
-// vrati true ak je validny, false ak nevalidny
+//prekontroluje ci je telegram validny
+//vrati true ak je validny, false ak nevalidny
 bool Telegram::isValidTelegram() {
   if (this->msg.stx != Telegram::STX)
     return false;
@@ -78,11 +78,11 @@ void Telegram::setUint16(int num, word val) {
     uint16[num] = val;
   }
 }
-// prekonvertuje telegram do char retazca ukonceneho '\x00'
-// buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
-// buffer - pole znakov kam sa bude konvertovat
-// msg - struktura telegramu
-// len - velkost struktury telegramu v bajtoch; sizeof(TELEGRAM)
+//prekonvertuje telegram do char retazca ukonceneho '\x00'
+//buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
+//buffer - pole znakov kam sa bude konvertovat
+//msg - struktura telegramu
+//len - velkost struktury telegramu v bajtoch; sizeof(TELEGRAM)
 void Telegram::encodeTelegram() {
   byte *b_msg = (byte *)this->getTelegram();
   byte *buf = (byte *)this->getBuffer();
@@ -100,11 +100,11 @@ void Telegram::encodeTelegram() {
   }
   buf[j] = 0x00;
 }
-// prekonvertuje char retazec ukonceny '\x00' na telegram
-// buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
-// buffer - pole znakov odkial sa bude konvertovat
-// msg - struktura telegramu
-// len - velkost struktury telegramu v bajtoch; int len = sizeof(TELEGRAM);
+//prekonvertuje char retazec ukonceny '\x00' na telegram
+//buffer musi mat velkost 2*sizeof(TELEGRAM) + 1 bajtov
+//buffer - pole znakov odkial sa bude konvertovat
+//msg - struktura telegramu
+//len - velkost struktury telegramu v bajtoch; int len = sizeof(TELEGRAM);
 void Telegram::decodeTelegram() {
   byte *b_msg = (byte *)this->getTelegram();
   byte *buf = (byte *)this->getBuffer();

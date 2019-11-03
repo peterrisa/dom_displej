@@ -1,5 +1,5 @@
 //--------------------------------------------------------------
-// wiring with UNO or Mega2560:
+// wiring with Mega2560, display
 //--------------POWER Pins--------------------------------------
 //   5V  connects to DC 5V
 //   GND connects to Ground
@@ -18,15 +18,6 @@
 //   LCD_D5   connects to digital pin 5
 //   LCD_D6   connects to digital pin 6
 //   LCD_D7   connects to digital pin 7
-//--------------SD-card fuction Pins ---------------------------
-// This Connection Only for UNO, Do not support Mega2560
-// because they use different Hardware-SPI Pins
-// SD_SS    connects to digital pin 10
-// SD_DI    connects to digital pin 11
-// SD_DO    connects to digital pin 12
-// SD_SCK   connects to digital pin 13
-//--------------------------------------------------------------
-
 
 
 // Knižnice
@@ -36,9 +27,9 @@
 #include <television.h>
 #include <server.h>
 
-// funkcia pre nacitanie stavu vystupov
+// Funkcia pre nacitanie stavu vystupov
 int digitalReadOutputPin(uint8_t pin);
-// zaluzie
+// žalúzie
 Louver *louver;
 // garaz
 Garage *garage;
@@ -46,9 +37,9 @@ Garage *garage;
 Light *light;
 // teplota
 Temp *temp;
-//televizor
+// televizor
 Television *television;
-//server
+// server
 Server *server;
 
 //--------------------------------------------------------------
@@ -57,15 +48,15 @@ Server *server;
 void readInputs()
 {
     //************************************************************
-    // načtení hodnoty z analogového pinu
-    // Světelný senzor TEMT6000
-    // vytvoření proměnných pro výsledky měření
+    // načítanie hodnoty z analogového pinu
+    // svetelný senzor TEMT6000
+    // vytvorenie premenných pre výsledok merania
     int osvit = light->doLightReadExposure();
-    // přepočet analogové hodnoty z celého rozsahu
-    //  0-1023 na procentuální rozsah 0-100
+    // prepočet analogovej hodnoty z celého rozsahu
+    //  0-1023 na percentuálny rozsah 0-100
     int prepocet = map(osvit, 0, 1023, 0, 100);
     television->setExposition(prepocet);
-    // zapamataj vypocitany osvit
+    // zapamätaj vypočítany osvit
     server->setWord(Server::ATB,prepocet);
     //************************************************************
     // TEPLOMER
@@ -75,10 +66,10 @@ void readInputs()
     // zapamataj aktualnu teplotu
     server->setWord(Server::ATM,teplota);
     //************************************************************
-    // nacitaj stav binarnych vstupov
-    // nastavenie koncovych poloh garaze otvorena poloha
+    // načítaj stav binarnych vstupov
+    // nastavenie koncových poloh garaze otvorena poloha
     if (digitalRead(OPEN_LIMIT_PIN) == LOW)
-    { // kontakt otvorene true
+    { // kontakt otvorene = true
         garage->setOpened(true);
         television->setOpened(true);
         server->setBit(Server::FDB,Server::FBK_GAR_ON,true);
@@ -86,14 +77,14 @@ void readInputs()
         server->setBit(Server::STA,Server::STA_GAR_ON,false);
     }
     else
-    { // kontakt otvorene false
+    { // kontakt otvorene = false
         garage->setOpened(false);
         television->setOpened(false);
         server->setBit(Server::FDB,Server::FBK_GAR_ON,false);
     }
-    // nastavenie koncovych poloh garaze zatvorena poloha
-    if (digitalRead(CLOSE_LIMIT_PIN) == LOW)
-    { // kontakt zatvorene true
+    // nastavenie koncovych polôh garáže zatvorena poloha
+    if (digitalRead(CLOSE_LIMIT_PIN) == LOW)procentuální
+    { // kontakt zatvorene = true
         garage->setClosed(true);
         television->setClosed(true);
         server->setBit(Server::FDB,Server::FBK_GAR_OFF,true);
@@ -101,37 +92,37 @@ void readInputs()
         server->setBit(Server::STA,Server::STA_GAR_OFF,false);
     }
     else
-    { // kontakt zatvorene false
+    { // kontakt zatvorene = false
         garage->setClosed(false);
         television->setClosed(false);
         server->setBit(Server::FDB,Server::FBK_GAR_OFF,false);
     }
 }
 //--------------------------------------------------------------
-// aktualizovat vystupy Arduina
+// aktualizovať výstupy Arduina
 //--------------------------------------------------------------
 void writeOutputs()
 {
-    // ak je poziadavka zatvorit garaz
+    // ak je požiadavka zatvoriť garáž
     if (server->getBit(Server::STA, Server::STA_GAR_OFF))
     {
-        // pohni garaz na zatvorenie
+        // pohni garáž na zatvorenie
         garage->doClose();
     }
-    // ak je poziadavka otvorit garaz
+    // ak je požiadavka otvoriť garáž
     if (server->getBit(Server::STA, Server::STA_GAR_ON))
     {
-        // pohni garaz na otvorenie
+        // pohni garáž na otvorenie
         garage->doOpen();
     }
     bool GarageMotorRuning =  garage->isClosing() | garage->isOpening();
     server->setBit(Server::FDB,Server::FBK_GAR_STOP,GarageMotorRuning);
 
-    // ak sa ma svetlo zapnut automaticky
+    // ak sa ma svetlo zapnúť automaticky
     if (server->getBit(Server::STA, Server::STA_LIT_AUT) || light->isAutomat())
     {
         light->doLightStartAutomat();
-        // vyhodnotit osvit
+        // vyhodnotiť osvit
         int i_val = (int)server->getWord(Server::ATB);
         if (i_val < ZAPNUTIE_SVETIEL_HRANICA)
         {
@@ -143,7 +134,7 @@ void writeOutputs()
             light->doLightTurnOff();
             television->setLight(false);
         }
-        // vyhodnotit zatvorenie zaclon od osvitu
+        // vyhodnotit zatvorenie záclon od osvitu
         if (i_val < ZATVORENIE_ZACLON_HRANICA)
         {
             louver->doLouverClose();
@@ -154,14 +145,14 @@ void writeOutputs()
         }
     }
 
-    // ak sa ma svetlo zapnut
+    // ak sa ma svetlo zapnúť
     if (server->getBit(Server::STA, Server::STA_LIT_ON))
     {
         light->doLightTurnOn();
         light->doLightStopAutomat();
         television->setLight(true);
     }
-    // ak sa ma svetlo vypnut
+    // ak sa ma svetlo vypnúť
     if (server->getBit(Server::STA, Server::STA_LIT_OFF))
     {
         light->doLightTurnOff();
@@ -169,7 +160,7 @@ void writeOutputs()
         television->setLight(false);
     }
     
- // odlozit aktualny stav relatok do feedbacku
+ // odlozit aktualny stav relátok do feedbacku
     server->setBit(Server::FDB,Server::FBK_LIT_ON,light->isLightOn());
     server->setBit(Server::FDB,Server::FBK_LIT_OFF,!light->isLightOn());
     server->setBit(Server::FDB,Server::FBK_LIT_AUT,light->isAutomat());
@@ -177,7 +168,7 @@ void writeOutputs()
 }
 
 //--------------------------------------------------------------
-// nacitaj aktualny stav vystupu
+// načítaj aktualny stav výstupu
 //--------------------------------------------------------------
 int digitalReadOutputPin(uint8_t pin)
 {
@@ -194,64 +185,67 @@ int digitalReadOutputPin(uint8_t pin)
 //--------------------------------------------------------------
 void setup()
 {
-    // zaluzie
+    // žaluzie
     louver = new Louver;
-    // garaz
+    // garáž
     garage = new Garage;
     // svetlo
     light = new Light;
     // teplota
     temp = new Temp;
-    //televizor
+    //televízor "SmartTV"
     television = new Television;
     //server
     server = new Server;
 
     //************************************************************
-    // nastavi displej
+    // nastaviť displej
     television->setup();
-    //ovladanie svetla
+    //ovládanie svetla
     light->setup();
     // nastavenie zaluzii
     louver->setup(PWM_B_PIN, IN1_B_PIN, IN2_B_PIN);
+    // nastavenie rýchlosti žalúzií
     louver->MaxSpeed = ZACLONY_SPEED;
     louver->DelayTransfer = ZACLONY_DELAY_TO_TRANSFER;
 
     // nastavenie garaze
     garage->setup(PWM_A_PIN, IN1_A_PIN, IN2_A_PIN);
+    //nastavenie rýchlosti otvárania garáže (3/4)
     garage->MaxSpeedToOpen = GARAGE_SPEED_OPEN;
+    //nastavenie rýclosti zatvárania garáže (maximum)
     garage->MaxSpeedToClose = GARAGE_SPEED_CLOSE;
 
     //************************************************************
-    // nastavenie vstupov
-    pinMode(OPEN_LIMIT_PIN, INPUT);  // kontakt otvorena garaz
-    pinMode(CLOSE_LIMIT_PIN, INPUT); // kontakt zatvorena garaze
+    // nastavenie výstupov
+    pinMode(OPEN_LIMIT_PIN, INPUT);  // kontakt otvorena garáže
+    pinMode(CLOSE_LIMIT_PIN, INPUT); // kontakt zatvorena garáže
     //************************************************************
-    // zahájení komunikace po sériové lince
-    // rychlostí 115200 baud
+    // začatie komunikáce po sériovej linke
+    // rychlosť 115200 baud
     Serial.begin(115200);
 }
 //--------------------------------------------------------------
-// hlavna slucka programu
+// hlavná slučka programu
 //--------------------------------------------------------------
-//nastavenie opakovacej slocky, cislo je v ms
+//nastavenie opakovacej slučky, čislo je v ms
 const int LOOP_DELAY = 100;
 
 void loop()
 {
-    //cakaj na dalsie povely zo servera
+    //čakaj na ďalsie povely zo servera
     server->setWord(Server::CMD, Server::CMD_NONE);
     server->setWord(Server::STA, Server::STA_NONE);
     //************************************************************
-    // nacitaj data zo serveru
+    // načítaj dáta zo serveru
     server->doReadMessage();
     //************************************************************
-    // nacitaj vstupy z Arduina
+    // načítaj vstupy z Arduina
     readInputs();
     //************************************************************
-    //vykonaj povely od nadradeneho servera
+    //vykonaj povely od nadradeného servera
 
-    // povel nastavenie teploty
+    //povel nastavenie teploty
     int setTemp = temp->getSetTemp();
     if(server->getBit(Server::CMD,Server::CMD_TEM_SET)){
         setTemp = server->getWord(Server::STM);
@@ -273,7 +267,7 @@ void loop()
         server->setBit(Server::STA,Server::STA_LIT_OFF, false);
     }
         
-    //povely pre garaz
+    //povely pre garáž
     if(server->getBit(Server::CMD,Server::CMD_GAR_ON)){
         server->setBit(Server::STA,Server::STA_GAR_ON, true);
     };
@@ -285,13 +279,13 @@ void loop()
     };        
 
     //************************************************************
-    // zobrazit data na displej
+    // zobraz dáta na displej
     television->drawScreen();
     //************************************************************
-    // aktualizovat vystupy Arduina
+    // aktualizovať vystupy Arduina
     writeOutputs();
     //************************************************************
-    // odoslat data do serveru
+    // odoslať dáta do serveru
     server->doWriteMessage();
     //************************************************************
  

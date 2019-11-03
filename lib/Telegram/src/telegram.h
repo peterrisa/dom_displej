@@ -3,74 +3,74 @@
 
 #include <Arduino.h>
 
-// celkova bajtova velkost telegramu je: 2*1 + 10*2 + 2*1= 24 bytov
+//celková bajtová veľkosť telegramu je: 2*1 + 10*2 + 2*1= 24 bytov
 typedef struct {
-  byte stx; // allways STX
-  byte len; // reserved
+  byte stx; //allways STX
+  byte len; //reserved
   //-------------------------------
-  // payload
+  //payload
   //-------------------------------
   word w[10];
   //-------------------------------
-  // end of payload
+  //end of payload
   //-------------------------------
-  byte crc; // reserved
-  byte etx; // allways ETX
+  byte crc;//reserved
+  byte etx;//allways ETX
 } TELEGRAM;
 
 class Telegram {
 public:
   static const byte MSG_LEN = sizeof(TELEGRAM);
   static const byte BUF_LEN = MSG_LEN * 2 + 1;
-  // temp char
+  //temp char
   static const byte ADD = 0x41;
-  // start of telegram
+  //start of telegram
   static const byte STX = 0x02;
-  // end of telegram
+  //end of telegram
   static const byte ETX = 0x03;
-  // offset of first byte in telegram
+  //offset of first byte in telegram
   static const byte START = 0;
-  // offset of last byte in telegram
+  //offset of last byte in telegram
   static const byte STOP = MSG_LEN - 1;
-  // datove objekty
+  //datove objekty
   TELEGRAM msg;
   byte buffer[Telegram::BUF_LEN];
-  // metody
+  //metody
   Telegram();
-  // urobi vzpis pola telegram
+  //urobi vzpis pola telegram
   void logTelegram(){};
-  // urobi vzpis pola Buffer
+  //urobi vzpis pola Buffer
   void logBuffer(){};
-  // vrati pole telegram
+  //vrati pole telegram
   byte *getTelegram() { return (byte *)&this->msg; };
-  // vrati pole Buffer
+  //vrati pole Buffer
   byte *getBuffer() { return this->buffer; };
-  // prekonvertuje string typu ASCII do pola Buffer
+  //prekonvertuje string typu ASCII do pola Buffer
   void setBuffer(char *str);
-  // prekonvertuje string typu ASCII do pola Telegram
+  //prekonvertuje string typu ASCII do pola Telegram
   void setTelegram(char *str);
-  // nastavi Uint8 hodnotu v poli TELEGRAM
+  //nastavi Uint8 hodnotu v poli TELEGRAM
   void setByteInTelegram(int num, byte val);
-  // vrati Uint8 hodnotu v poli Telegram
+  //vrati Uint8 hodnotu v poli Telegram
   byte getByteInTelegram(int num);
-  // nastavi Uint8 hodnotu v poli buffer
+  //nastavi Uint8 hodnotu v poli buffer
   void setByteInBuffer(int num, byte val);
-  // vrati Uint8 hodnotu v poli Buffer
+  //vrati Uint8 hodnotu v poli Buffer
   byte getByteInBuffer(int num);
-  // vrati Uint16 hodnotu z payload pola
-  // num index v poli
+  //vrati Uint16 hodnotu z payload pola
+  //num index v poli
   word getUint16(int num);
-  // nastavi Uint16 hodnotu z payload pola
-  // num index v poli
+  //nastavi Uint16 hodnotu z payload pola
+  //num index v poli
   void setUint16(int num, word val);
-  // prekontroluje ci je telegram validny
-  // vrati true ak je validny, false ak nevalidny
+  //prekontroluje ci je telegram validny
+  //vrati true ak je validny, false ak nevalidny
   bool isValidTelegram();
-  // prekonvertuje telegram do char retazca
+  //prekonvertuje telegram do char retazca
   void encodeTelegram();
-  // prekonvertuje char retazec ukonceny '\x00' na telegram
+  //prekonvertuje char retazec ukonceny '\x00' na telegram
   void decodeTelegram();
-  // prekonvertuje cislo word do float
+  //prekonvertuje cislo word do float
   union Cislo {
     byte sig : 1;  // znamienko
     byte cele : 8; // cela cast cisla
@@ -90,7 +90,7 @@ public:
     return f_val;
   };
 
-  // prekonvertuje cislo float do word
+  //prekonvertuje cislo float do word
   //			-32768 32767
   word cnvFtoW(const float f_val) {
     union Cislo num;

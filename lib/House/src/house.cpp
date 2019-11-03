@@ -32,7 +32,7 @@ void Louver::doLouverClose()
     louverPosition = false;
 }
 
-//ovladanie garaze
+//ovládanie garáže
 void Garage::setup(int en, int in1, int in2)
 {
     motor.setup(en, in1, in2);
@@ -45,7 +45,7 @@ void Garage::doStop()
 
 void Garage::doOpen()
 {
-    //ak ma limit v pozadovanom smere, nevykona pohyb
+    //ak má limit v požadovanom smere, nevykoná pohyb
     if (_openLimit)
     {
         _isOpening = false;
@@ -59,7 +59,7 @@ void Garage::doOpen()
 
 void Garage::doClose()
 {
-    //ak ma limit v pozadovanom smere, nevykona pohyb
+    //ak má limit v požadovanom smere, nevykoná pohyb
     if (_closeLimit)
     {
         _isClosing = false;
@@ -72,22 +72,22 @@ void Garage::doClose()
     _isClosing = true;
 }
 
-//nastav limit open
+//nastav limit |open|
 void Garage::setOpened(bool limit)
 {
     _openLimit = limit;
-    //ak dosiahol limit v smere presunu, okamzite zastav pohyb
+    //ak dosiahol limit v smere presunu, okamžite zastav pohyb
     if (isOpening() && _openLimit)
     {
         doStop();
         _isOpening = false;
     }
 };
-//nastav limit close
+//nastav limit |close|
 void Garage::setClosed(bool limit)
 {
     _closeLimit = limit;
-    //ak dosiahol limit v smere presunu, okamzite zastav pohyb
+    //ak dosiahol limit v smere presunu, okamžite zastav pohyb
     if (isClosing() && _closeLimit)
     {
         doStop();
@@ -95,47 +95,47 @@ void Garage::setClosed(bool limit)
     }
 };
 
-//ovladanie svetla
+//ovládanie svetla
 void Light::setup()
 {
-    // nastavenie vystupov , relatok
+    // nastavenie výstupov , relátok
     pinMode(LIGHT_RELAY_PIN, OUTPUT); // 12V zapnutie LED svetiel
     digitalWrite(LIGHT_RELAY_PIN, HIGH);
 }
 //zapne svetlo
 void Light::doLightTurnOn()
 {
-    digitalWrite(LIGHT_RELAY_PIN, LOW); // relé 1 zapnut
+    digitalWrite(LIGHT_RELAY_PIN, LOW); // relé 1 zapnúť
     _isLightOn = true;
 }
 //vypne svetlo
 void Light::doLightTurnOff()
 {
-    digitalWrite(LIGHT_RELAY_PIN, HIGH); // relé 1 vypnut
+    digitalWrite(LIGHT_RELAY_PIN, HIGH); // relé 1 vypnuť
     _isLightOn = false;
 }
-//zapne automat
+//zapne automatiku
 void Light::doLightStartAutomat()
 {
     _isAutomat = true;
 }
-//vypne automat
+//vypne automatiku
 void Light::doLightStopAutomat()
 {
     _isAutomat = false;
 }
-//zisti osvit
+//zisti okolitý jas
 int Light::doLightReadExposure()
 {
     _osvit = analogRead(LIGHT_SENSOR_PIN);
     return doLightGetExposure();
 }
 
-//teplotne cidla
+//teplotné čidlá
 Temp::Temp()
 {
     setSetTemp(25);
-    // začni komunikovať s teplomermi
+    //začni komunikovať s teplomermi
     _oneWireDS.begin(TEMP_INPUT_PIN);
     _senzoryDS.setOneWire(&_oneWireDS);
     _senzoryDS.begin();
@@ -154,9 +154,9 @@ Temp::Temp()
 
 void Temp::doRead()
 {
-    // načíta všetky teplomery
+    //načíta všetky teplomery
     _senzoryDS.requestTemperatures();
-    // uloží teploty do poľa teplota
+    //uloží teploty do poľa teplota
     for (byte sensor = 0; sensor < _num_temp; sensor++)
     {
         _teplota[sensor] = _senzoryDS.getTempCByIndex(sensor);

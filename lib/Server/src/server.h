@@ -15,32 +15,32 @@
 #define BITMASK_CHECK_ALL(x, y) (((x) & (y)) == (y))
 #define BITMASK_CHECK_ANY(x, y) ((x) & (y))
 
-// typedef struct {
-//  byte stx; // allways STX
-//  byte len; // reserved
+//typedef struct {
+//byte stx; // allways STX
+//byte len; // reserved
 //-------------------------------
-// payload
+//payload
 //-------------------------------
-//  word w_0; // -- setpoint teplota
-//  word w_1; // -- skutocna teplota
-//  word w_2; // -- aktualny osvit
-//  word w_3; // -- reserved
-//  word w_4; // -- reserved
-//  word w_5; // -- reserved
-//  word w_6; // -- tx setpoint teplota
-//  word w_7; // -- stav vystupov
-//  word w_8; // -- feedbacky
-//  word w_9; // -- prikazy
+//word w_0; // -- setpoint teplota
+//word w_1; // -- skutocna teplota
+//word w_2; // -- aktualny osvit
+//word w_3; // -- reserved
+//word w_4; // -- reserved
+//word w_5; // -- reserved
+//word w_6; // -- tx setpoint teplota
+//word w_7; // -- stav vystupov
+//word w_8; // -- feedbacky
+//word w_9; // -- prikazy
 //-------------------------------
-// end of payload
+//end of payload
 //-------------------------------
-//  byte crc; // reserved
-//  byte etx; // allways ETX
-//} TELEGRAM;
+//byte crc; // reserved
+//byte etx; // allways ETX
+//TELEGRAM;
 
 #include <Arduino.h>
 
-//komunikacia so serverom
+//komunikácia zo serverom
 #include <telegram.h>
 
 //server
@@ -48,83 +48,83 @@ class Server
 {
 public:
     enum MASKS
-    { // konstanty pre kodovanie povelu pre Arduino
-        //ziadny povel
+    { // konštanty pre kódovanie povelu pre Arduino
+        //žiadny povel
         CMD_NONE = 0x0000,
-        // povel garaz otvorit
+        //povel garáž otvoriť
         CMD_GAR_ON = 0x0001,
-        // povel garaz zatvorit
+        //povel garaž zatvoriť
         CMD_GAR_OFF = 0x0002,
-        // povel garaz zatvorit
+        //povel garaž zatvoriť
         CMD_GAR_STOP = 0x0004,
-        // povel svetlo zapnut
+        //povel svetlo zapnuť
         CMD_LIT_ON = 0x0008,
-        // povel svetlo vypnut
+        //povel svetlo vypnuť
         CMD_LIT_OFF = 0x0010,
-        // povel svetlo automat
+        //povel svetlo automat
         CMD_LIT_AUT = 0x0020,
-        // povel nastavenie teploty
+        //povel nastavenie teploty
         CMD_TEM_SET = 0x0040,
-  // konstanty pre kodovanie stavov
-        //ziadny stav
+        //konštanty pre kódovanie stavov
+        //žiadny stav
         STA_NONE = 0x0000,
-        // chcem aby sa garaz otvorila
+        //chcem aby sa garáž otvorila
         STA_GAR_ON = 0x0001,
-        // chcem aby sa garaz zatvorila
+        //chcem aby sa garáž zatvorila
         STA_GAR_OFF = 0x0002,
-        // chcem aby sa garaz zastavila
+        //chcem aby sa garáž zastavila
         STA_GAR_STOP = 0x0004,
-        // stav chcem mat zapnute svetlo
+        //stav chcem mať zapnuté svetlo
         STA_LIT_ON = 0x0008,
-        // stav chce mat vypnute svetlo
+        //stav chcem mať vypnuté svetlo
         STA_LIT_OFF = 0x0010,
-        // stav chcem mat automaticke svetlo
+        //stav chcem mať automatické svetlo
         STA_LIT_AUT = 0x0020,
-     // konstanty pre kodovanie feedbacku od arduina
-        // stav garaz otvorena
+        //konštanty pre kódovanie feedbacku od arduina
+        //stav garáž otvorená
         FBK_GAR_ON = 0x0001,
-        // stav garaz zatvorena
+        //stav garáž zatvorená
         FBK_GAR_OFF = 0x0002,
-        // stav garaz zastavena
+        //stav garáž zastavená
         FBK_GAR_STOP = 0x0004,
-        // stav zapnutie svetla
+        //stav zapnutia svetla
         FBK_LIT_ON = 0x0008,
-        // stav vypnutie svetla
+        //stav vypnutia svetla
         FBK_LIT_OFF = 0x0010,
-        // stav svetlo v automate
+        //stav svetlo v automatike
         FBK_LIT_AUT = 0x0020,
-        // stav kurenie zapnute
+        //stav kúrenia zapnuté
         FBK_HEAT_ON = 0x0080,
-        // stav chladenie zapnute
+        //stav chladenie zapnuté
         FBK_COOL_ON = 0x0100,
-        // stav ochrana zapnuta
+        //stav ochrana zapnutá
         FBK_SAFE_ON = 0x0200,
-        // stav rele_0
+        //stav relé_0
         FBK_RELE_0 = 0x0400,
-        // stav rele_1
+        //stav relé_1
         FBK_RELE_1 = 0x0800,
-        // stav rele_2
+        //stav relé_2
         FBK_RELE_2 = 0x1000,
-        // stav rele_3
+        //stav relé_3
         FBK_RELE_3 = 0x2000,
-        // stav rele_4
+        //stav relé_4
         FBK_RELE_4 = 0x4000,
-        // stav rele_5
+        //stav relé_5
         FBK_RELE_5 = 0x8000
     };
     enum WORDS
     {
-        // word setpoint teplota
+        //word setpoint teplota
         STM = 0,
-        // word actual teplota
+        //word actual teplota
         ATM = 1,
-        // word actual osvitu
+        //word actual osvitu
         ATB = 2,
-        // status word
+        //status word
         STA = 7,
-        // feedback word
+        //feedback word
         FDB = 8,
-        // command word
+        //command word
         CMD = 9
     };
     Server();
@@ -136,12 +136,12 @@ public:
     void setBit(Server::WORDS address, Server::MASKS mask, bool bit);
     //get bit
     bool getBit(Server::WORDS address,Server::MASKS  mask);
-    // odosli data do serveru
+    //odosli data do serveru
     void doWriteMessage();
-    // nacitaj data zo serveru
+    //nacitaj data zo serveru
     void doReadMessage();
 
 private:
-    // komunikacia
+    //komunikacia
     Telegram telegram;
 };

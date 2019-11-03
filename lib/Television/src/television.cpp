@@ -38,21 +38,21 @@ void Television::setup()
     _tft.fillScreen(BLACK);
     //unsigned long start =
     micros();
-    // Otočenie obrazovky (o 90 stupňov) (0=0, 1=90, 2=180, 3=270)
+    //Otočenie obrazovky (o 90 stupňov) (0=0, 1=90, 2=180, 3=270)
     _tft.setRotation(3);
 }
 
 //--------------------------------------------------------------
-// SVETLA
+//---SVETLÁ---
 //--------------------------------------------------------------
 void Television::doDrawBlock1()
-{ // SVETLA
+{//SVETLÁ
     _drawBlock1 = false;
 
     // vykreslenie oblého štvorca
     //(osa X, osa Y, rozmery X, Rozmery Y, zaoblenie, farba)
     _tft.fillRoundRect(3, 0, 230, 210, 10, WHITE);
-    // Text (Stvorec 2) - Svetla
+    //Text (Stvorec 2) - Svetla
     _tft.setCursor(50, 10);
     _tft.setTextColor(BLACK);
     _tft.setTextSize(4);
@@ -76,15 +76,15 @@ void Television::doDrawBlock1()
     _redrawBlock1 = true;
 }
 //--------------------------------------------------------------
-// kresli jas
+//kresli |jas|
 //--------------------------------------------------------------
 void Television::doRedrawBlock1()
-{ // SVETLA
+{ //SVETLA
     _redrawBlock1 = false;
 
-    // prekresli pozadie textu
+    //prekresli pozadie textu
     _tft.fillRect(45, 165, 170, 30, WHITE);
-    // nastav parametre textu
+    //nastav parametre textu
     _tft.setCursor(45, 170);
     _tft.setTextColor(GREY);
     _tft.setTextSize(3);
@@ -93,15 +93,15 @@ void Television::doRedrawBlock1()
     _tft.println(_string);
 }
 //--------------------------------------------------------------
-// nakresli obdlznik s grafikou garaze
+//nakresli obdlznik s grafikou garaze
 //--------------------------------------------------------------
 void Television::doDrawBlock2()
-{ // GARAZ
+{ //GARÁŽ
     _drawBlock2 = false;
     // vykreslenie oblého štvorca
     //(osa X, osa Y, rozmery X, Rozmery Y, zaoblenie, farba)
     _tft.fillRoundRect(245, 0, 225, 210, 10, WHITE);
-    // Text (Stvorec 1) - Garaz
+    //Text (Stvorec 1) - Garaz
     _tft.setCursor(300, 10);
     _tft.setTextColor(BLACK);
     _tft.setTextSize(4);
@@ -110,10 +110,10 @@ void Television::doDrawBlock2()
     _redrawBlock2 = true;
 }
 //--------------------------------------------------------------
-// kresli garaze
+//kresli |Garáž|
 //--------------------------------------------------------------
 void Television::doRedrawBlock2()
-{ // GARAZ
+{//GARÁŽ
     _redrawBlock2 = false;
 
     _tft.fillRect(280, 55, 160, 30, WHITE);
@@ -122,7 +122,7 @@ void Television::doRedrawBlock2()
     _tft.setTextColor(RED);
     _tft.setTextSize(3);
 
-    // Garaz otvorena obrazok + text
+    //Garaz otvorena obrazok + text
     if (_openLimit)
     {
         _tft.setCursor(290, 55);
@@ -132,7 +132,7 @@ void Television::doRedrawBlock2()
         _tft.fillRect(267, 100, 180, 100, BLACK);
         _tft.fillRect(279, 110, 155, 16, WHITE);
     }
-    // Garaz zatvorena text + obrazok
+    //Garaz zatvorena text + obrazok
     if (_closeLimit)
     {
         _tft.setCursor(280, 55);
@@ -145,7 +145,7 @@ void Television::doRedrawBlock2()
         _tft.fillRect(279, 152, 155, 16, WHITE);
         _tft.fillRect(279, 173, 155, 16, WHITE);
     }
-    // Garaz pracuje
+    //Garaz pracuje
     if (!_openLimit && !_closeLimit)
     {
         _tft.setCursor(290, 55);
@@ -158,10 +158,10 @@ void Television::doRedrawBlock2()
     }
 }
 //--------------------------------------------------------------
-// blok s teplotami
+//blok s teplotami
 //--------------------------------------------------------------
 void Television::doDrawBlock3()
-{ // TEPLOTA IZBY
+{ //TEPLOTA IZBY
     _drawBlock3 = false;
     // vykreslenie oblého štvorca
     //(osa X, osa Y, rozmery X, Rozmery Y, zaoblenie, farba)
@@ -177,7 +177,7 @@ void Television::doDrawBlock3()
 }
 
 void Television::doRedrawBlock3()
-{ // TEPLOTA IZBY
+{ //TEPLOTA IZBY
 
     _redrawBlock3 = false;
 
@@ -268,7 +268,7 @@ void Television::setExposition(int osvit)
         _redrawBlock1 = true;
     }
 }
-//Svetla
+//Svetlá
 void Television::setLight(bool light)
 {
     if (_light != light)
