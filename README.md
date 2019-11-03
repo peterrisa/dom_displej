@@ -11,15 +11,19 @@ Ovláda pomocou driver L298N bránu garáže a záclony. Pomocou relé svetlá.
 ## Quick start
 
 Na spustenie projektu je nutné mať k dispozícii Arduino (ideálne Mega 2560). Taktiež je potrebné mať nejaký editor, pomocou ktorého sa nahrá kód do Arduina, prípadne sa upraví na mieru. Odporúčam základné Arduino IDe, alebo PlatformIO.
+Ako nahrať kód:
+1. otvoriť súbor /src/main.cpp v IDE programe
+2. nahrať súbor do Arduina
+3. užívať si
 
 ## Schéma zapojenia:
 
 ### Displej:
--------------POWER Pins-------------------------
+-------------POWER Pins--------------
    5V  connects to DC 5V
    GND connects to Ground
    3V3 do not need to connect(NC)
---------------LCD Display Pins------------------
+------------LCD Display Pins---------
    LCD_RD   connects to Analog pin A0
    LCD_WR   connects to Analog pin A1
    LCD_RS   connects to Analog pin A2
@@ -33,6 +37,13 @@ Na spustenie projektu je nutné mať k dispozícii Arduino (ideálne Mega 2560).
    LCD_D5   connects to digital pin 5
    LCD_D6   connects to digital pin 6
    LCD_D7   connects to digital pin 7
-------------------------------------------------
+-------------------------------------
 
 ### Relé:
+--------------RELAY--------------
+   RELAY 1 connects to LED 12V
+   RELAY 2 connects to ---
+---------------------------------
+   5V  connects to DC 5V
+   GND connects to Ground
+---------------------------------
