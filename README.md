@@ -47,3 +47,24 @@ Ako nahrať kód:
    5V  connects to DC 5V
    GND connects to Ground
 ---------------------------------
+
+
+### Senzory
+-------------Sensors-------------
+   Light_sensor connects to
+   Temp_sensor connects to
+---------------------------------
+
+
+### Koncové polohy
+-----------End_ostion------------
+ End_Z connects to
+ End_O connects to
+---------------------------------
+
+
+### Motory
+-------------Motors--------------
+   Motor A (garaz) connects to
+   Motor B (zaclony) connects to
+---------------------------------

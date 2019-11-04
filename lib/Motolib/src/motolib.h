@@ -10,7 +10,7 @@ motor A motor B
 IN1	IN2	IN3	IN4	Direction
 0	0	0	0	Stop
 1	0	1	0	Forward
-0	1	0	1	Reverse
+0	1	0	1	Reverseconnects to
 1	0	0	1	Left
 0	1	1	0	Right
 */
