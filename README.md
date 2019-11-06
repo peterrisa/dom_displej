@@ -18,12 +18,13 @@ Ako nahrať kód:
 
 ## Schéma zapojenia:
 
-### Displej:
--------------POWER Pins--------------
+### Displej
+
+ -------------POWER Pins--------------
    5V  connects to DC 5V
    GND connects to Ground
    3V3 do not need to connect(NC)
-------------LCD Display Pins---------
+ ------------LCD Display Pins---------
    LCD_RD   connects to Analog pin A0
    LCD_WR   connects to Analog pin A1
    LCD_RS   connects to Analog pin A2
@@ -37,9 +38,9 @@ Ako nahrať kód:
    LCD_D5   connects to digital pin 5
    LCD_D6   connects to digital pin 6
    LCD_D7   connects to digital pin 7
--------------------------------------
+ -------------------------------------
 
-### Relé:
+### Relé
 --------------RELAY--------------
    RELAY 1 connects to LED 12V
    RELAY 2 connects to ---
