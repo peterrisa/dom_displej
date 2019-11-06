@@ -16,7 +16,7 @@ Ako nahrať kód:
 2. nahrať súbor do Arduina
 3. užívať si
 
-## Schéma zapojenia:
+## Schéma zapojenia
 
 ### Displej
 
@@ -41,6 +41,7 @@ Ako nahrať kód:
  -------------------------------------
 
 ### Relé
+
 --------------RELAY--------------
    RELAY 1 connects to LED 12V
    RELAY 2 connects to ---
@@ -51,6 +52,7 @@ Ako nahrať kód:
 
 
 ### Senzory
+
 -------------Sensors-------------
    Light_sensor connects to
    Temp_sensor connects to
@@ -58,13 +60,15 @@ Ako nahrať kód:
 
 
 ### Koncové polohy
------------End_ostion------------
+
+-----------End_postion------------
  End_Z connects to
  End_O connects to
 ---------------------------------
 
 
 ### Motory
+
 -------------Motors--------------
    Motor A (garaz) connects to
    Motor B (zaclony) connects to
