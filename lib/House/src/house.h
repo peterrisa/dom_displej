@@ -9,7 +9,7 @@
 //ovládanie motorov
 #include <motolib.h>
 
-//žalúzie
+//žalúzie/louver
 //motor záclony B
 const int PWM_B_PIN = 44;
 const int IN1_B_PIN = 38;

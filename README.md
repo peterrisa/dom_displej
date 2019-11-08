@@ -6,7 +6,7 @@ Projekt je vytvorený v multifunkčnom editore [PlatformIO](https://platformio.o
 
 ## Funkcie
 Displej zobrazuje vyhodnotené hodnoty zo senzorov a stav garáže. Hodnotami sa rozumie okolitá teplota, okolitý jas.
-Ovláda pomocou driver L298N bránu garáže a záclony. Pomocou relé svetlá.
+Ovláda pomocou driver LM298N bránu garáže a záclony. Pomocou relé svetlá.
 
 ## Quick start
 
@@ -79,9 +79,9 @@ Ako nahrať kód:
 
  -------------Sensors-------------
 
-   Light_sensor connects to
+   Light_sensor connects to pin14
 
-   Temp_sensor connects to
+   Temp_sensor connects to  pinA6
 
  ---------------------------------
 
@@ -90,9 +90,9 @@ Ako nahrať kód:
 
  -----------End_postion------------
 
- End_Z connects to
+ End_Z connects to pin15
 
- End_O connects to
+ End_O connects to pin16
 
  ---------------------------------
 
@@ -101,8 +101,12 @@ Ako nahrať kód:
 
  -------------Motors--------------
 
-   Motor A (garaz) connects to
+   Motor A (garaz) connects to pin44
+                   connects to IN2_A pin38
+                   connects to IN1_A pin36
 
-   Motor B (záclony) connects to
+   Motor B (záclony) connects to pin46
+                     connects to IN2_B pin42
+                     connects to IN1_B pin40
 
  ---------------------------------

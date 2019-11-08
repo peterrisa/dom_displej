@@ -63,11 +63,11 @@ void readInputs()
     //0-1023 na percentuálny rozsah 0-100
     int prepocet = map(osvit, 0, 1023, 0, 100);
     television->setExposition(prepocet);
-    // zapamätaj vypočítany osvit
+    // zapamätaj vypočítany osvita
     server->setWord(Server::ATB,prepocet);
     //************************************************************
     //TEPLOMER
-    temp->doRead();
+    temp->doRead();a
     float teplota = temp->getTemp();
     television->setCurTemp((int)teplota);
     //zapamataj aktualnu teplotu
@@ -90,7 +90,7 @@ void readInputs()
         server->setBit(Server::FDB,Server::FBK_GAR_ON,false);
     }
     //nastavenie koncovych polôh garáže zatvorena poloha
-    if (digitalRead(CLOSE_LIMIT_PIN) == LOW)procentuální
+    if (digitalRead(CLOSE_LIMIT_PIN) == LOW)//procentuální
     {//kontakt zatvorene = true
         garage->setClosed(true);
         television->setClosed(true);
